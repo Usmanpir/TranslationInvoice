@@ -1,0 +1,122 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  password      String
+  companyName   String?
+  companyLogo   String?
+  address       String?
+  phone         String?
+  taxNumber     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  customers     Customer[]
+  invoices      Invoice[]
+  quotations    Quotation[]
+}
+
+model Customer {
+  id         String      @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  address    String?
+  company    String?
+  taxNumber  String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices   Invoice[]
+  quotations Quotation[]
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  invoiceNumber String      @unique
+  status      InvoiceStatus @default(PENDING)
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime
+  notes       String?
+  taxRate     Float         @default(0)
+  discount    Float         @default(0)
+  subtotal    Float         @default(0)
+  taxAmount   Float         @default(0)
+  discountAmount Float      @default(0)
+  total       Float         @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      String
+  customerId  String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer    Customer      @relation(fields: [customerId], references: [id])
+  items       InvoiceItem[]
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  description String
+  quantity    Float
+  unitPrice   Float
+  total       Float
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Quotation {
+  id              String          @id @default(cuid())
+  quotationNumber String          @unique
+  status          QuotationStatus @default(DRAFT)
+  issueDate       DateTime        @default(now())
+  validUntil      DateTime
+  notes           String?
+  taxRate         Float           @default(0)
+  discount        Float           @default(0)
+  subtotal        Float           @default(0)
+  taxAmount       Float           @default(0)
+  discountAmount  Float           @default(0)
+  total           Float           @default(0)
+  convertedToInvoice Boolean      @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          String
+  customerId      String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  items           QuotationItem[]
+}
+
+model QuotationItem {
+  id          String    @id @default(cuid())
+  description String
+  quantity    Float
+  unitPrice   Float
+  total       Float
+  quotationId String
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  CONVERTED
+}
