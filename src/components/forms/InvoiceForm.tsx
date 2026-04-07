@@ -27,7 +27,7 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
     : new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
   const [dueDate, setDueDate] = useState(dueDateDefault)
   const [notes, setNotes] = useState(initialData?.notes || '')
-  const [taxRate, setTaxRate] = useState(initialData?.taxRate ?? 10)
+  const [taxRate, setTaxRate] = useState(initialData?.taxRate ?? 5)
   const [discount, setDiscount] = useState(initialData?.discount ?? 0)
   const [items, setItems] = useState<Item[]>(
     initialData?.items?.map((i: any) => ({
@@ -124,6 +124,7 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
                 <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Description</th>
                 <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-24">Qty</th>
                 <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-32">Unit Price</th>
+                <th className="text-left text-xs font-medium text-slate-500 px-4 py-3">Taxes</th>
                 <th className="text-right text-xs font-medium text-slate-500 px-6 py-3 w-28">Total</th>
                 <th className="w-10" />
               </tr>
@@ -164,6 +165,11 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
                       />
                     </div>
                   </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm font-medium text-slate-900">
+                      VAT 5% (Dubai)
+                    </span>
+                  </td>
                   <td className="px-6 py-3 text-right">
                     <span className="text-sm font-medium text-slate-900">
                       {formatCurrency(item.quantity * item.unitPrice)}
@@ -186,7 +192,7 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
         <div className="border-t border-slate-100 px-6 py-5">
           <div className="flex gap-8 justify-end">
             <div className="flex flex-col gap-2 text-sm min-w-[200px]">
-              <div className="flex items-center gap-4">
+              {/* <div className="flex items-center gap-4">
                 <label className="text-slate-500 flex-1">Discount (%)</label>
                 <input
                   type="number"
@@ -195,26 +201,17 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
                   className="input w-24 text-right text-sm py-1.5"
                   min="0" max="100" step="0.1"
                 />
-              </div>
-              <div className="flex items-center gap-4">
-                <label className="text-slate-500 flex-1">Tax rate (%)</label>
-                <input
-                  type="number"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="input w-24 text-right text-sm py-1.5"
-                  min="0" max="100" step="0.1"
-                />
-              </div>
+              </div> */}
+
               <div className="border-t border-slate-200 pt-2 mt-1 space-y-1.5">
                 <div className="flex justify-between text-slate-500">
                   <span>Subtotal</span><span>{formatCurrency(totals.subtotal)}</span>
                 </div>
-                {discount > 0 && (
+                {discount >0 && (
                   <div className="flex justify-between text-emerald-600">
                     <span>Discount ({discount}%)</span><span>-{formatCurrency(totals.discountAmount)}</span>
                   </div>
-                )}
+                )} 
                 {taxRate > 0 && (
                   <div className="flex justify-between text-slate-500">
                     <span>Tax ({taxRate}%)</span><span>{formatCurrency(totals.taxAmount)}</span>

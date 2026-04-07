@@ -16,6 +16,7 @@ const updateSchema = z.object({
   dueDate: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
+  paymentProof: z.string().nullable().optional(),
   taxRate: z.number().min(0).max(100).optional(),
   discount: z.number().min(0).max(100).optional(),
   items: z.array(itemSchema).optional(),
@@ -47,7 +48,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
 
     const body = await request.json()
-    const { customerId, dueDate, notes, status, taxRate, discount, items } = updateSchema.parse(body)
+    const { customerId, dueDate, notes, status, paymentProof, taxRate, discount, items } = updateSchema.parse(body)
 
     let totals = {}
     if (items) {
@@ -63,6 +64,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         ...(dueDate && { dueDate: new Date(dueDate) }),
         ...(notes !== undefined && { notes }),
         ...(status && { status }),
+        ...(paymentProof !== undefined && { paymentProof }),
         ...(taxRate !== undefined && { taxRate }),
         ...(discount !== undefined && { discount }),
         ...totals,
@@ -92,6 +94,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
 
     const invoice = await prisma.invoice.findFirst({ where: { id: params.id, userId: session.user.id } })
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })

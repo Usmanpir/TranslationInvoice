@@ -1,12 +1,16 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Receipt, Plus, Search, Eye, Edit2, Trash2, Loader2, Download, CheckCircle, XCircle } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { Receipt, Plus, Search, Eye, Edit2, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function InvoicesPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
+
   const [invoices, setInvoices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -32,6 +36,7 @@ export default function InvoicesPage() {
   useEffect(() => { fetchInvoices() }, [fetchInvoices])
 
   const handleDelete = async (id: string, num: string) => {
+    if (!isAdmin) return
     if (!confirm(`Delete invoice ${num}?`)) return
     await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
     fetchInvoices()
@@ -140,9 +145,15 @@ export default function InvoicesPage() {
                         <Link href={`/invoices/${invoice.id}/edit`} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Edit">
                           <Edit2 className="w-3.5 h-3.5" />
                         </Link>
-                        <button onClick={() => handleDelete(invoice.id, invoice.invoiceNumber)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(invoice.id, invoice.invoiceNumber)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

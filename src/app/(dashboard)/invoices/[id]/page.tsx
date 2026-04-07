@@ -2,17 +2,22 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Edit2, Trash2, Download, CheckCircle, XCircle, ArrowLeft, Printer } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { Loader2, Edit2, Trash2, CheckCircle, XCircle, ArrowLeft, FileCheck } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { InvoicePDFButton } from '@/components/pdf/InvoicePDFButton'
+import { PaymentProofModal } from '@/components/PaymentProofModal'
 
 export default function InvoiceDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { data: session } = useSession()
   const [invoice, setInvoice] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const isAdmin = session?.user?.role === 'admin'
 
   useEffect(() => {
     fetch(`/api/invoices/${params.id}`)
@@ -21,15 +26,26 @@ export default function InvoiceDetailPage() {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  const toggleStatus = async () => {
-    const newStatus = invoice.status === 'PAID' ? 'PENDING' : 'PAID'
+  const markUnpaid = async () => {
     const res = await fetch(`/api/invoices/${params.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: 'PENDING', paymentProof: null }),
+    })
+    if (!res.ok) return
+    const updated = await res.json()
+    setInvoice(updated)
+  }
+
+  const handlePaymentProof = async (fileUrl: string) => {
+    const res = await fetch(`/api/invoices/${params.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'PAID', paymentProof: fileUrl }),
     })
     const updated = await res.json()
     setInvoice(updated)
+    setShowPaymentModal(false)
   }
 
   const handleDelete = async () => {
@@ -47,12 +63,18 @@ export default function InvoiceDetailPage() {
     <div>
       <PageHeader title={invoice.invoiceNumber} description={`Created ${formatDate(invoice.createdAt)}`}>
         <Link href="/invoices" className="btn-secondary"><ArrowLeft className="w-4 h-4" />Back</Link>
-        <button onClick={toggleStatus} className={`btn-secondary ${invoice.status === 'PAID' ? 'text-amber-600' : 'text-emerald-600'}`}>
-          {invoice.status === 'PAID' ? <><XCircle className="w-4 h-4" />Mark Unpaid</> : <><CheckCircle className="w-4 h-4" />Mark Paid</>}
-        </button>
+        {invoice.status === 'PAID' ? (
+          <button onClick={markUnpaid} className="btn-secondary text-amber-600">
+            <XCircle className="w-4 h-4" />Mark Unpaid
+          </button>
+        ) : (
+          <button onClick={() => setShowPaymentModal(true)} className="btn-secondary text-emerald-600">
+            <CheckCircle className="w-4 h-4" />Mark Paid
+          </button>
+        )}
         <InvoicePDFButton invoice={invoice} />
         <Link href={`/invoices/${params.id}/edit`} className="btn-secondary"><Edit2 className="w-4 h-4" />Edit</Link>
-        <button onClick={handleDelete} className="btn-danger"><Trash2 className="w-4 h-4" />Delete</button>
+        {isAdmin && <button onClick={handleDelete} className="btn-danger"><Trash2 className="w-4 h-4" />Delete</button>}
       </PageHeader>
 
       <div className="p-8">
@@ -117,14 +139,14 @@ export default function InvoiceDetailPage() {
             {/* Totals */}
             <div className="flex justify-end">
               <div className="w-60 space-y-2">
-                <div className="flex justify-between text-sm text-slate-500">
+                {/* <div className="flex justify-between text-sm text-slate-500">
                   <span>Subtotal</span><span>{formatCurrency(invoice.subtotal)}</span>
-                </div>
-                {invoice.discount > 0 && (
+                </div> */}
+                {/* {invoice.discount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-600">
                     <span>Discount ({invoice.discount}%)</span><span>-{formatCurrency(invoice.discountAmount)}</span>
                   </div>
-                )}
+                )} */}
                 {invoice.taxRate > 0 && (
                   <div className="flex justify-between text-sm text-slate-500">
                     <span>Tax ({invoice.taxRate}%)</span><span>{formatCurrency(invoice.taxAmount)}</span>
@@ -143,9 +165,47 @@ export default function InvoiceDetailPage() {
                 <p className="text-sm text-slate-600 leading-relaxed">{invoice.notes}</p>
               </div>
             )}
+
+            {/* Payment Proof */}
+            {invoice.paymentProof && (
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                  <FileCheck className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+                  Payment Proof
+                </p>
+                {invoice.paymentProof.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
+                  <a href={invoice.paymentProof} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={invoice.paymentProof}
+                      alt="Payment proof"
+                      className="max-h-60 rounded-lg border border-slate-200 object-contain hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                ) : (
+                  <a
+                    href={invoice.paymentProof}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-brand-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <FileCheck className="w-4 h-4" />
+                    View payment proof document
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Payment Proof Modal */}
+      {showPaymentModal && (
+        <PaymentProofModal
+          invoiceNumber={invoice.invoiceNumber}
+          onConfirm={handlePaymentProof}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   )
 }
