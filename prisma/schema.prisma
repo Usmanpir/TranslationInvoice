@@ -13,6 +13,7 @@ model User {
   name          String
   email         String      @unique
   password      String
+  role          String      @default("user")
   companyName   String?
   companyLogo   String?
   address       String?
@@ -48,6 +49,7 @@ model Invoice {
   issueDate   DateTime      @default(now())
   dueDate     DateTime
   notes       String?
+  paymentProof String?
   taxRate     Float         @default(0)
   discount    Float         @default(0)
   subtotal    Float         @default(0)

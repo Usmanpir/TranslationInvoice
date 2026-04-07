@@ -5,9 +5,28 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
+  // Create default admin user
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@invoiceflow.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456'
+  const adminHashedPassword = await bcrypt.hash(adminPassword, 12)
+
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { role: 'admin' },
+    create: {
+      name: 'Admin',
+      email: adminEmail,
+      password: adminHashedPassword,
+      role: 'admin',
+      companyName: 'InvoiceFlow',
+    },
+  })
+
+  console.log(`🔑 Default admin created: ${adminEmail} / ${adminPassword}`)
+
   // Create demo user
   const hashedPassword = await bcrypt.hash('demo123456', 12)
-  
+
   const user = await prisma.user.upsert({
     where: { email: 'demo@invoiceflow.com' },
     update: {},
