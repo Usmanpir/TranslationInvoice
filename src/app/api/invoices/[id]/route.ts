@@ -6,6 +6,7 @@ import { calculateInvoiceTotals } from '@/lib/utils'
 import { z } from 'zod'
 
 const itemSchema = z.object({
+  code: z.string().optional().default(''),
   description: z.string().min(1),
   quantity: z.number().min(0.01),
   unitPrice: z.number().min(0),
@@ -17,6 +18,9 @@ const updateSchema = z.object({
   notes: z.string().optional(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
   paymentProof: z.string().nullable().optional(),
+  currency: z.enum(['USD', 'EUR', 'AED']).optional(),
+  salesperson: z.string().nullable().optional(),
+  completionDays: z.string().nullable().optional(),
   taxRate: z.number().min(0).max(100).optional(),
   discount: z.number().min(0).max(100).optional(),
   items: z.array(itemSchema).optional(),
@@ -29,7 +33,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const invoice = await prisma.invoice.findFirst({
       where: { id: params.id, userId: session.user.id },
-      include: { customer: true, items: true, user: true },
+      include: {
+        customer: true,
+        items: true,
+        user: {
+          select: {
+            name: true, email: true, companyName: true, address: true, phone: true,
+            taxNumber: true, bankName: true, bankBranch: true, bankAccountName: true,
+            bankAccountNumber: true, iban: true, swiftCode: true, paypalEmail: true,
+          },
+        },
+      },
     })
 
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
@@ -48,7 +62,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
 
     const body = await request.json()
-    const { customerId, dueDate, notes, status, paymentProof, taxRate, discount, items } = updateSchema.parse(body)
+    const { customerId, dueDate, notes, status, paymentProof, currency, salesperson, completionDays, taxRate, discount, items } = updateSchema.parse(body)
 
     let totals = {}
     if (items) {
@@ -65,6 +79,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         ...(notes !== undefined && { notes }),
         ...(status && { status }),
         ...(paymentProof !== undefined && { paymentProof }),
+        ...(currency && { currency }),
+        ...(salesperson !== undefined && { salesperson }),
+        ...(completionDays !== undefined && { completionDays }),
         ...(taxRate !== undefined && { taxRate }),
         ...(discount !== undefined && { discount }),
         ...totals,
@@ -72,6 +89,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           items: {
             deleteMany: {},
             create: items.map((item) => ({
+              code: item.code || null,
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,

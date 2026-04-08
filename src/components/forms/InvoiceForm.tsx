@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Loader2, Save, Calculator } from 'lucide-react'
-import { formatCurrency, calculateInvoiceTotals } from '@/lib/utils'
+import { formatCurrency, calculateInvoiceTotals, CURRENCIES, type CurrencyCode } from '@/lib/utils'
 
 interface Item {
+  code: string
   description: string
   quantity: number
   unitPrice: number
@@ -29,12 +30,16 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
   const [notes, setNotes] = useState(initialData?.notes || '')
   const [taxRate, setTaxRate] = useState(initialData?.taxRate ?? 5)
   const [discount, setDiscount] = useState(initialData?.discount ?? 0)
+  const [currency, setCurrency] = useState<CurrencyCode>(initialData?.currency || 'AED')
+  const [salesperson, setSalesperson] = useState(initialData?.salesperson || '')
+  const [completionDays, setCompletionDays] = useState(initialData?.completionDays || '')
   const [items, setItems] = useState<Item[]>(
     initialData?.items?.map((i: any) => ({
+      code: i.code || '',
       description: i.description,
       quantity: i.quantity,
       unitPrice: i.unitPrice,
-    })) || [{ description: '', quantity: 1, unitPrice: 0 }]
+    })) || [{ code: '', description: '', quantity: 1, unitPrice: 0 }]
   )
 
   useEffect(() => {
@@ -43,13 +48,15 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
       .then((d) => setCustomers(d.customers || []))
   }, [])
 
-  const addItem = () => setItems([...items, { description: '', quantity: 1, unitPrice: 0 }])
+  const addItem = () => setItems([...items, { code: '', description: '', quantity: 1, unitPrice: 0 }])
   const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i))
   const updateItem = (i: number, field: keyof Item, value: string | number) =>
     setItems(items.map((item, idx) => (idx === i ? { ...item, [field]: value } : item)))
 
   const totals = calculateInvoiceTotals(items, taxRate, discount)
   const isQuotation = type === 'quotation'
+
+  const currencySymbol = CURRENCIES[currency].symbol
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,7 +75,17 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
       const res = await fetch(editEndpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId, [dateKey]: dueDate, notes, taxRate, discount, items }),
+        body: JSON.stringify({
+          customerId,
+          [dateKey]: dueDate,
+          notes,
+          taxRate,
+          discount,
+          currency,
+          salesperson: salesperson || undefined,
+          completionDays: completionDays || undefined,
+          items,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -106,6 +123,25 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" required />
           </div>
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label className="label">Currency *</label>
+            <select value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)} className="input">
+              {Object.values(CURRENCIES).map((c) => (
+                <option key={c.code} value={c.code}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Salesperson</label>
+            <input type="text" value={salesperson} onChange={(e) => setSalesperson(e.target.value)} className="input" placeholder="Name of salesperson" />
+          </div>
+          <div>
+            <label className="label">Completion Days</label>
+            <input type="text" value={completionDays} onChange={(e) => setCompletionDays(e.target.value)} className="input" placeholder="e.g. 7 days" />
+          </div>
+        </div>
       </div>
 
       {/* Items */}
@@ -121,18 +157,28 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Description</th>
+                <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-36">Code</th>
+                <th className="text-left text-xs font-medium text-slate-500 px-4 py-3">Description</th>
                 <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-24">Qty</th>
                 <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-32">Unit Price</th>
-                <th className="text-left text-xs font-medium text-slate-500 px-4 py-3">Taxes</th>
-                <th className="text-right text-xs font-medium text-slate-500 px-6 py-3 w-28">Total</th>
+                <th className="text-left text-xs font-medium text-slate-500 px-4 py-3 w-24">Tax</th>
+                <th className="text-right text-xs font-medium text-slate-500 px-4 py-3 w-28">Total</th>
                 <th className="w-10" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {items.map((item, i) => (
                 <tr key={i}>
-                  <td className="px-6 py-3">
+                  <td className="px-4 py-3">
+                    <input
+                      type="text"
+                      value={item.code}
+                      onChange={(e) => updateItem(i, 'code', e.target.value)}
+                      className="input text-sm"
+                      placeholder="e.g. EN-AR"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
                     <input
                       type="text"
                       value={item.description}
@@ -149,30 +195,30 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
                       onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
                       className="input text-sm"
                       min="0.01"
-                      step="0.01"
+                      step="0.001"
                     />
                   </td>
                   <td className="px-4 py-3">
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">{currencySymbol}</span>
                       <input
                         type="number"
                         value={item.unitPrice}
                         onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="input text-sm pl-6"
+                        className="input text-sm pl-10"
                         min="0"
                         step="0.01"
                       />
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-slate-900">
-                      VAT 5% (Dubai)
+                    <span className="text-xs font-medium text-slate-600">
+                      VAT {taxRate}%
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-4 py-3 text-right">
                     <span className="text-sm font-medium text-slate-900">
-                      {formatCurrency(item.quantity * item.unitPrice)}
+                      {formatCurrency(item.quantity * item.unitPrice, currency)}
                     </span>
                   </td>
                   <td className="pr-3 py-3">
@@ -191,34 +237,23 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
         {/* Totals */}
         <div className="border-t border-slate-100 px-6 py-5">
           <div className="flex gap-8 justify-end">
-            <div className="flex flex-col gap-2 text-sm min-w-[200px]">
-              {/* <div className="flex items-center gap-4">
-                <label className="text-slate-500 flex-1">Discount (%)</label>
-                <input
-                  type="number"
-                  value={discount}
-                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="input w-24 text-right text-sm py-1.5"
-                  min="0" max="100" step="0.1"
-                />
-              </div> */}
-
+            <div className="flex flex-col gap-2 text-sm min-w-[220px]">
               <div className="border-t border-slate-200 pt-2 mt-1 space-y-1.5">
                 <div className="flex justify-between text-slate-500">
-                  <span>Subtotal</span><span>{formatCurrency(totals.subtotal)}</span>
+                  <span>Subtotal</span><span>{formatCurrency(totals.subtotal, currency)}</span>
                 </div>
-                {discount >0 && (
+                {discount > 0 && (
                   <div className="flex justify-between text-emerald-600">
-                    <span>Discount ({discount}%)</span><span>-{formatCurrency(totals.discountAmount)}</span>
+                    <span>Discount ({discount}%)</span><span>-{formatCurrency(totals.discountAmount, currency)}</span>
                   </div>
-                )} 
+                )}
                 {taxRate > 0 && (
                   <div className="flex justify-between text-slate-500">
-                    <span>Tax ({taxRate}%)</span><span>{formatCurrency(totals.taxAmount)}</span>
+                    <span>VAT ({taxRate}%)</span><span>{formatCurrency(totals.taxAmount, currency)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-slate-900 text-base pt-1 border-t border-slate-200">
-                  <span>Total</span><span>{formatCurrency(totals.total)}</span>
+                  <span>Total</span><span>{formatCurrency(totals.total, currency)}</span>
                 </div>
               </div>
             </div>
@@ -228,7 +263,7 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
 
       {/* Notes */}
       <div className="card p-6">
-        <label className="label">Notes (optional)</label>
+        <label className="label">Notes / Terms (optional)</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

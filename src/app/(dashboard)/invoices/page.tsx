@@ -132,7 +132,7 @@ export default function InvoicesPage() {
                       <StatusBadge status={invoice.status} />
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-sm font-semibold text-slate-900">{formatCurrency(invoice.total)}</span>
+                      <span className="text-sm font-semibold text-slate-900">{formatCurrency(invoice.total, invoice.currency || 'AED')}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-1.5">

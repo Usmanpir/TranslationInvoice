@@ -6,6 +6,7 @@ import { generateInvoiceNumber, calculateInvoiceTotals } from '@/lib/utils'
 import { z } from 'zod'
 
 const itemSchema = z.object({
+  code: z.string().optional().default(''),
   description: z.string().min(1),
   quantity: z.number().min(0.01),
   unitPrice: z.number().min(0),
@@ -15,6 +16,9 @@ const invoiceSchema = z.object({
   customerId: z.string().min(1),
   dueDate: z.string(),
   notes: z.string().optional(),
+  currency: z.enum(['USD', 'EUR', 'AED']).default('AED'),
+  salesperson: z.string().optional(),
+  completionDays: z.string().optional(),
   taxRate: z.number().min(0).max(100).default(0),
   discount: z.number().min(0).max(100).default(0),
   items: z.array(itemSchema).min(1, 'At least one item required'),
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { customerId, dueDate, notes, taxRate, discount, items } = invoiceSchema.parse(body)
+    const { customerId, dueDate, notes, currency, salesperson, completionDays, taxRate, discount, items } = invoiceSchema.parse(body)
 
     // Verify customer belongs to user
     const customer = await prisma.customer.findFirst({ where: { id: customerId, userId: session.user.id } })
@@ -81,11 +85,15 @@ export async function POST(request: Request) {
         userId: session.user.id,
         dueDate: new Date(dueDate),
         notes,
+        currency,
+        salesperson,
+        completionDays,
         taxRate,
         discount,
         ...totals,
         items: {
           create: items.map((item) => ({
+            code: item.code || null,
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,

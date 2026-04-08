@@ -128,7 +128,7 @@ export default function DashboardPage() {
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{invoice.customer?.name} · Due {formatDate(invoice.dueDate)}</p>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">{formatCurrency(invoice.total)}</p>
+                  <p className="text-sm font-semibold text-slate-900">{formatCurrency(invoice.total, invoice.currency || 'AED')}</p>
                 </Link>
               ))}
             </div>

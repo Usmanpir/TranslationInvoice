@@ -9,7 +9,12 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, email: true, companyName: true, address: true, phone: true, taxNumber: true },
+    select: {
+      id: true, name: true, email: true, companyName: true, address: true,
+      phone: true, taxNumber: true, bankName: true, bankBranch: true,
+      bankAccountName: true, bankAccountNumber: true, iban: true,
+      swiftCode: true, paypalEmail: true,
+    },
   })
   return NextResponse.json(user)
 }
@@ -19,11 +24,19 @@ export async function PUT(request: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name, companyName, address, phone, taxNumber } = body
+  const {
+    name, companyName, address, phone, taxNumber,
+    bankName, bankBranch, bankAccountName, bankAccountNumber,
+    iban, swiftCode, paypalEmail,
+  } = body
 
   const user = await prisma.user.update({
     where: { id: session.user.id },
-    data: { name, companyName, address, phone, taxNumber },
+    data: {
+      name, companyName, address, phone, taxNumber,
+      bankName, bankBranch, bankAccountName, bankAccountNumber,
+      iban, swiftCode, paypalEmail,
+    },
     select: { id: true, name: true, email: true, companyName: true },
   })
   return NextResponse.json(user)

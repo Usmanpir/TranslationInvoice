@@ -19,7 +19,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const quotation = await prisma.quotation.findFirst({
       where: { id: params.id, userId: session.user.id },
-      include: { customer: true, items: true, user: true },
+      include: {
+        customer: true,
+        items: true,
+        user: {
+          select: {
+            name: true, email: true, companyName: true, address: true, phone: true,
+            taxNumber: true, bankName: true, bankBranch: true, bankAccountName: true,
+            bankAccountNumber: true, iban: true, swiftCode: true, paypalEmail: true,
+          },
+        },
+      },
     })
 
     if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 })
@@ -58,6 +68,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           userId: session.user.id,
           dueDate,
           notes: quotation.notes,
+          currency: quotation.currency,
+          salesperson: quotation.salesperson,
+          completionDays: quotation.completionDays,
           taxRate: quotation.taxRate,
           discount: quotation.discount,
           subtotal: quotation.subtotal,
@@ -66,6 +79,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           total: quotation.total,
           items: {
             create: items.map((item) => ({
+              code: item.code,
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
