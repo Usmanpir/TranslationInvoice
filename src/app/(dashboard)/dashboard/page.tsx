@@ -1,10 +1,11 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { TrendingUp, Receipt, CheckCircle, Clock, AlertCircle, Users, Plus, ArrowRight, Calendar, RotateCcw } from 'lucide-react'
+import { TrendingUp, Receipt, CheckCircle, Clock, AlertCircle, Users, Plus, ArrowRight, RotateCcw } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
@@ -110,31 +111,27 @@ export default function DashboardPage() {
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
         {/* Date range filter */}
         <div className="card p-4 flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-[160px]">
             <label className="text-xs font-medium text-slate-500 block mb-1.5">From</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                max={to || undefined}
-                className="input pl-9"
-              />
-            </div>
+            <DatePicker
+              value={from}
+              onChange={setFrom}
+              max={to || undefined}
+              placeholder="Earliest"
+              clearable
+              ariaLabel="From date"
+            />
           </div>
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-[160px]">
             <label className="text-xs font-medium text-slate-500 block mb-1.5">To</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                min={from || undefined}
-                className="input pl-9"
-              />
-            </div>
+            <DatePicker
+              value={to}
+              onChange={setTo}
+              min={from || undefined}
+              placeholder="Today"
+              clearable
+              ariaLabel="To date"
+            />
           </div>
           <button
             onClick={apply}

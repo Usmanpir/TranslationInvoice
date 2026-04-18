@@ -78,8 +78,8 @@ export function CustomerForm({ initialData }: CustomerFormProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="label">Phone</label>
-            <input type="tel" value={formData.phone} onChange={update('phone')} className="input" placeholder="+1 (555) 000-0000" />
+            <label className="label">Phone *</label>
+            <input type="tel" value={formData.phone} onChange={update('phone')} className="input" placeholder="+1 (555) 000-0000" required />
           </div>
           <div>
             <label className="label">Company</label>

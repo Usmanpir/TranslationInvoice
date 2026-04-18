@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Receipt, Plus, Search, Eye, Edit2, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Receipt, Plus, Search, Eye, Edit2, Trash2, Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -47,16 +47,6 @@ export default function InvoicesPage() {
     })
     if (!ok) return
     await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
-    fetchInvoices()
-  }
-
-  const toggleStatus = async (invoice: any) => {
-    const newStatus = invoice.status === 'PAID' ? 'PENDING' : 'PAID'
-    await fetch(`/api/invoices/${invoice.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    })
     fetchInvoices()
   }
 
@@ -156,9 +146,6 @@ export default function InvoicesPage() {
                         <Link href={`/invoices/${invoice.id}`} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="View">
                           <Eye className="w-3.5 h-3.5" />
                         </Link>
-                        <button onClick={() => toggleStatus(invoice)} className={`p-1.5 rounded-lg transition-colors ${invoice.status === 'PAID' ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-500 hover:bg-emerald-50'}`} title={invoice.status === 'PAID' ? 'Mark unpaid' : 'Mark paid'}>
-                          {invoice.status === 'PAID' ? <XCircle className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                        </button>
                         <Link href={`/invoices/${invoice.id}/edit`} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Edit">
                           <Edit2 className="w-3.5 h-3.5" />
                         </Link>

@@ -32,6 +32,13 @@ export default function InvoiceDetailPage() {
   const cur = (invoice?.currency || 'AED') as CurrencyCode
 
   const markUnpaid = async () => {
+    const ok = await dialog.confirm({
+      title: 'Mark invoice as unpaid?',
+      message: 'The invoice will move back to pending and the attached payment proof will be removed.',
+      confirmLabel: 'Mark unpaid',
+      variant: 'warning',
+    })
+    if (!ok) return
     const res = await fetch(`/api/invoices/${params.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

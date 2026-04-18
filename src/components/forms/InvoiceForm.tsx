@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Loader2, Save, Calculator } from 'lucide-react'
 import { formatCurrency, calculateInvoiceTotals, CURRENCIES, type CurrencyCode } from '@/lib/utils'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 interface Item {
   code: string
@@ -120,7 +121,13 @@ export function InvoiceForm({ type = 'invoice', initialData }: InvoiceFormProps)
           </div>
           <div>
             <label className="label">{isQuotation ? 'Valid Until' : 'Due Date'} *</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" required />
+            <DatePicker
+              value={dueDate}
+              onChange={setDueDate}
+              placeholder={isQuotation ? 'Select validity date' : 'Select due date'}
+              required
+              ariaLabel={isQuotation ? 'Valid until' : 'Due date'}
+            />
           </div>
         </div>
 
