@@ -61,39 +61,41 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
       const items = await prisma.quotationItem.findMany({ where: { quotationId: params.id } })
 
-      const invoice = await prisma.invoice.create({
-        data: {
-          invoiceNumber,
-          customerId: quotation.customerId,
-          userId: session.user.id,
-          dueDate,
-          notes: quotation.notes,
-          currency: quotation.currency,
-          salesperson: quotation.salesperson,
-          completionDays: quotation.completionDays,
-          taxRate: quotation.taxRate,
-          discount: quotation.discount,
-          subtotal: quotation.subtotal,
-          taxAmount: quotation.taxAmount,
-          discountAmount: quotation.discountAmount,
-          total: quotation.total,
-          items: {
-            create: items.map((item) => ({
-              code: item.code,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-            })),
+      const [invoice] = await prisma.$transaction([
+        prisma.invoice.create({
+          data: {
+            invoiceNumber,
+            customerId: quotation.customerId,
+            userId: quotation.userId,
+            quotationId: quotation.id,
+            dueDate,
+            notes: quotation.notes,
+            currency: quotation.currency,
+            salesperson: quotation.salesperson,
+            completionDays: quotation.completionDays,
+            taxRate: quotation.taxRate,
+            discount: quotation.discount,
+            subtotal: quotation.subtotal,
+            taxAmount: quotation.taxAmount,
+            discountAmount: quotation.discountAmount,
+            total: quotation.total,
+            items: {
+              create: items.map((item) => ({
+                code: item.code,
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total,
+              })),
+            },
           },
-        },
-        include: { customer: true, items: true },
-      })
-
-      await prisma.quotation.update({
-        where: { id: params.id },
-        data: { status: 'CONVERTED', convertedToInvoice: true },
-      })
+          include: { customer: true, items: true },
+        }),
+        prisma.quotation.update({
+          where: { id: params.id },
+          data: { status: 'CONVERTED', convertedToInvoice: true },
+        }),
+      ])
 
       return NextResponse.json({ invoice, message: 'Quotation converted to invoice' })
     }

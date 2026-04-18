@@ -31,11 +31,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const isAdmin = session.user.role === 'admin'
     const invoice = await prisma.invoice.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, ...(isAdmin ? {} : { userId: session.user.id }) },
       include: {
         customer: true,
         items: true,
+        quotation: { select: { id: true, quotationNumber: true } },
         user: {
           select: {
             name: true, email: true, companyName: true, address: true, phone: true,
@@ -58,7 +60,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const invoice = await prisma.invoice.findFirst({ where: { id: params.id, userId: session.user.id } })
+    const isAdmin = session.user.role === 'admin'
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: params.id, ...(isAdmin ? {} : { userId: session.user.id }) },
+    })
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
 
     const body = await request.json()
@@ -114,7 +119,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (session.user.role !== 'admin') return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
 
-    const invoice = await prisma.invoice.findFirst({ where: { id: params.id, userId: session.user.id } })
+    const invoice = await prisma.invoice.findFirst({ where: { id: params.id } })
     if (!invoice) return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
 
     await prisma.invoice.delete({ where: { id: params.id } })

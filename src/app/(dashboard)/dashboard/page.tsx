@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { TrendingUp, Receipt, CheckCircle, Clock, AlertCircle, Users, Plus, ArrowRight } from 'lucide-react'
+import { TrendingUp, Receipt, CheckCircle, Clock, AlertCircle, Users, Plus, ArrowRight, Calendar, RotateCcw } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -9,15 +9,48 @@ import { PageHeader } from '@/components/ui/PageHeader'
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [appliedFrom, setAppliedFrom] = useState('')
+  const [appliedTo, setAppliedTo] = useState('')
 
-  useEffect(() => {
-    fetch('/api/dashboard')
-      .then((r) => r.json())
-      .then(setData)
-      .finally(() => setLoading(false))
+  const load = useCallback(async (f: string, t: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (f) params.set('from', f)
+      if (t) params.set('to', t)
+      const qs = params.toString()
+      const res = await fetch(`/api/dashboard${qs ? `?${qs}` : ''}`)
+      setData(await res.json())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  if (loading) {
+  useEffect(() => {
+    load('', '')
+  }, [load])
+
+  const apply = () => {
+    if (from && to && new Date(from) > new Date(to)) return
+    setAppliedFrom(from)
+    setAppliedTo(to)
+    load(from, to)
+  }
+
+  const reset = () => {
+    setFrom('')
+    setTo('')
+    setAppliedFrom('')
+    setAppliedTo('')
+    load('', '')
+  }
+
+  const hasFilter = Boolean(appliedFrom || appliedTo)
+  const filterDirty = from !== appliedFrom || to !== appliedTo
+
+  if (loading && !data) {
     return (
       <div className="flex items-center justify-center h-full min-h-96">
         <div className="flex flex-col items-center gap-3">
@@ -75,6 +108,56 @@ export default function DashboardPage() {
       </PageHeader>
 
       <div className="p-8 space-y-8">
+        {/* Date range filter */}
+        <div className="card p-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="text-xs font-medium text-slate-500 block mb-1.5">From</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                max={to || undefined}
+                className="input pl-9"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 block mb-1.5">To</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                min={from || undefined}
+                className="input pl-9"
+              />
+            </div>
+          </div>
+          <button
+            onClick={apply}
+            disabled={(!from && !to) || !filterDirty || loading}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Apply
+          </button>
+          <button
+            onClick={reset}
+            disabled={!hasFilter && !from && !to}
+            className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </button>
+          {hasFilter && (
+            <span className="ml-auto text-xs text-slate-500">
+              Showing {appliedFrom ? formatDate(appliedFrom) : 'earliest'} – {appliedTo ? formatDate(appliedTo) : 'today'}
+            </span>
+          )}
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {statCards.map((stat) => (

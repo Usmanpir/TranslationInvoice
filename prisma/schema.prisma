@@ -31,6 +31,22 @@ model User {
   customers     Customer[]
   invoices      Invoice[]
   quotations    Quotation[]
+  uploads       Upload[]
+}
+
+model Upload {
+  id        String   @id @default(cuid())
+  filename  String
+  mimeType  String
+  size      Int
+  data      Bytes
+  checksum  String?
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([checksum])
 }
 
 model Customer {
@@ -70,8 +86,10 @@ model Invoice {
   updatedAt      DateTime      @updatedAt
   userId         String
   customerId     String
+  quotationId    String?       @unique
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer       Customer      @relation(fields: [customerId], references: [id])
+  quotation      Quotation?    @relation(fields: [quotationId], references: [id], onDelete: SetNull)
   items          InvoiceItem[]
 }
 
@@ -110,6 +128,7 @@ model Quotation {
   user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   customer           Customer        @relation(fields: [customerId], references: [id])
   items              QuotationItem[]
+  invoice            Invoice?
 }
 
 model QuotationItem {

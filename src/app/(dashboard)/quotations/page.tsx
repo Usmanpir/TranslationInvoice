@@ -1,12 +1,15 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { FileQuestion, Plus, Search, Eye, Edit2, Trash2, Loader2, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FileQuestion, Plus, Search, Eye, Edit2, Trash2, Loader2, ArrowRight, Receipt } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function QuotationsPage() {
+  const router = useRouter()
+  const [converting, setConverting] = useState<string | null>(null)
   const [quotations, setQuotations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -37,15 +40,23 @@ export default function QuotationsPage() {
   }
 
   const handleConvert = async (id: string) => {
-    if (!confirm('Convert this quotation to an invoice?')) return
-    const res = await fetch(`/api/quotations/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'convert' }),
-    })
-    if (res.ok) {
-      alert('Quotation converted to invoice successfully!')
-      fetchQuotations()
+    if (converting) return
+    if (!confirm('Convert this quotation to an invoice? You can keep editing the invoice before marking it paid.')) return
+    setConverting(id)
+    try {
+      const res = await fetch(`/api/quotations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'convert' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.error || 'Conversion failed')
+        return
+      }
+      router.push(`/invoices/${data.invoice.id}/edit`)
+    } finally {
+      setConverting(null)
     }
   }
 
@@ -111,9 +122,23 @@ export default function QuotationsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-1.5">
-                        {!q.convertedToInvoice && (
-                          <button onClick={() => handleConvert(q.id)} className="p-1.5 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Convert to Invoice">
-                            <ArrowRight className="w-3.5 h-3.5" />
+                        {q.invoice ? (
+                          <Link
+                            href={`/invoices/${q.invoice.id}`}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                            title={`Converted to ${q.invoice.invoiceNumber}`}
+                          >
+                            <Receipt className="w-3 h-3" />
+                            {q.invoice.invoiceNumber}
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => handleConvert(q.id)}
+                            disabled={converting === q.id}
+                            className="p-1.5 text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            title="Convert to Invoice"
+                          >
+                            {converting === q.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
                           </button>
                         )}
                         <Link href={`/quotations/${q.id}/edit`} className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">

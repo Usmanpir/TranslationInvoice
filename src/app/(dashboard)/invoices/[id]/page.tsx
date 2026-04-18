@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Loader2, Edit2, Trash2, CheckCircle, XCircle, ArrowLeft, FileCheck } from 'lucide-react'
+import { Loader2, Edit2, Trash2, CheckCircle, XCircle, ArrowLeft, FileCheck, FileQuestion } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -86,6 +86,18 @@ export default function InvoiceDetailPage() {
 
       <div className="p-8">
         <div className="max-w-4xl">
+          {invoice.quotation && (
+            <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-100 text-sm text-purple-800">
+              <FileQuestion className="w-4 h-4 flex-shrink-0" />
+              <span>Converted from quotation</span>
+              <Link
+                href={`/quotations/${invoice.quotation.id}/edit`}
+                className="font-semibold hover:underline"
+              >
+                {invoice.quotation.quotationNumber}
+              </Link>
+            </div>
+          )}
           <div className="card p-8 print:shadow-none" id="invoice-print">
 
             {/* Company Logo / Name centered */}

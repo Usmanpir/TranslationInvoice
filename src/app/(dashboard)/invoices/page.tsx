@@ -106,6 +106,9 @@ export default function InvoicesPage() {
                 <tr className="border-b border-slate-100 bg-slate-50/50">
                   <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5">Invoice</th>
                   <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5 hidden md:table-cell">Customer</th>
+                  {isAdmin && (
+                    <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5 hidden lg:table-cell">Owner</th>
+                  )}
                   <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5 hidden lg:table-cell">Due Date</th>
                   <th className="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5">Status</th>
                   <th className="text-right text-xs font-medium text-slate-500 uppercase tracking-wide px-6 py-3.5">Amount</th>
@@ -125,6 +128,12 @@ export default function InvoicesPage() {
                       <p className="text-sm text-slate-700">{invoice.customer?.name}</p>
                       {invoice.customer?.company && <p className="text-xs text-slate-400">{invoice.customer.company}</p>}
                     </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <p className="text-sm text-slate-700">{invoice.user?.companyName || invoice.user?.name || '-'}</p>
+                        {invoice.user?.email && <p className="text-xs text-slate-400">{invoice.user.email}</p>}
+                      </td>
+                    )}
                     <td className="px-6 py-4 hidden lg:table-cell">
                       <span className="text-sm text-slate-600">{formatDate(invoice.dueDate)}</span>
                     </td>

@@ -36,7 +36,8 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    const where: any = { userId: session.user.id }
+    const isAdmin = session.user.role === 'admin'
+    const where: any = isAdmin ? {} : { userId: session.user.id }
     if (status) where.status = status
     if (search) {
       where.OR = [
@@ -48,7 +49,13 @@ export async function GET(request: Request) {
     const [invoices, total] = await Promise.all([
       prisma.invoice.findMany({
         where,
-        include: { customer: true, items: true },
+        include: {
+          customer: true,
+          items: true,
+          ...(isAdmin && {
+            user: { select: { id: true, name: true, email: true, companyName: true } },
+          }),
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,

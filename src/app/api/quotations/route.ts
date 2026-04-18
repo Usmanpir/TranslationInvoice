@@ -48,7 +48,11 @@ export async function GET(request: Request) {
     const [quotations, total] = await Promise.all([
       prisma.quotation.findMany({
         where,
-        include: { customer: true, items: true },
+        include: {
+          customer: true,
+          items: true,
+          invoice: { select: { id: true, invoiceNumber: true } },
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
