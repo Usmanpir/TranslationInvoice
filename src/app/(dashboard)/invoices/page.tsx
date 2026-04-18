@@ -6,10 +6,12 @@ import { Receipt, Plus, Search, Eye, Edit2, Trash2, Loader2, CheckCircle, XCircl
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { useDialog } from '@/components/ui/Dialog'
 
 export default function InvoicesPage() {
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'admin'
+  const dialog = useDialog()
 
   const [invoices, setInvoices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +39,13 @@ export default function InvoicesPage() {
 
   const handleDelete = async (id: string, num: string) => {
     if (!isAdmin) return
-    if (!confirm(`Delete invoice ${num}?`)) return
+    const ok = await dialog.confirm({
+      title: `Delete invoice ${num}?`,
+      message: 'This invoice and its line items will be permanently removed.',
+      confirmLabel: 'Delete invoice',
+      variant: 'danger',
+    })
+    if (!ok) return
     await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
     fetchInvoices()
   }
@@ -62,7 +70,7 @@ export default function InvoicesPage() {
         </Link>
       </PageHeader>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="relative flex-1 min-w-[200px] max-w-sm">

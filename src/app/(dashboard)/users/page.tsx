@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { formatDate } from '@/lib/utils'
+import { useDialog } from '@/components/ui/Dialog'
 import {
   Loader2,
   Plus,
@@ -31,6 +32,7 @@ interface User {
 export default function UsersPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const dialog = useDialog()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -65,7 +67,13 @@ export default function UsersPage() {
   const toggleRole = async (userId: string, currentRole: string) => {
     if (userId === session?.user?.id) return
     const newRole = currentRole === 'admin' ? 'user' : 'admin'
-    if (!confirm(`Change this user's role to ${newRole}?`)) return
+    const ok = await dialog.confirm({
+      title: `Change role to ${newRole}?`,
+      message: `This user will ${newRole === 'admin' ? 'gain admin privileges.' : 'lose admin privileges.'}`,
+      confirmLabel: `Make ${newRole}`,
+      variant: 'warning',
+    })
+    if (!ok) return
 
     const res = await fetch(`/api/admin/users/${userId}`, {
       method: 'PUT',
@@ -77,20 +85,34 @@ export default function UsersPage() {
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)))
     } else {
       const data = await res.json()
-      alert(data.error || 'Failed to update role')
+      await dialog.alert({
+        title: 'Could not update role',
+        message: data.error || 'Failed to update role',
+        variant: 'danger',
+      })
     }
   }
 
   const deleteUser = async (userId: string, userName: string) => {
     if (userId === session?.user?.id) return
-    if (!confirm(`Delete user "${userName}"? This will delete all their data (customers, invoices, quotations).`)) return
+    const ok = await dialog.confirm({
+      title: `Delete ${userName}?`,
+      message: 'This will permanently delete the user and all of their customers, invoices, and quotations.',
+      confirmLabel: 'Delete user',
+      variant: 'danger',
+    })
+    if (!ok) return
 
     const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
     if (res.ok) {
       setUsers(users.filter((u) => u.id !== userId))
     } else {
       const data = await res.json()
-      alert(data.error || 'Failed to delete user')
+      await dialog.alert({
+        title: 'Could not delete user',
+        message: data.error || 'Failed to delete user',
+        variant: 'danger',
+      })
     }
   }
 
@@ -111,7 +133,7 @@ export default function UsersPage() {
         </button>
       </PageHeader>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {error && (
           <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-6">
             {error}

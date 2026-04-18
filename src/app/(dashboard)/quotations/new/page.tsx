@@ -5,7 +5,7 @@ export default function NewQuotationPage() {
   return (
     <div>
       <PageHeader title="Create Quotation" description="Send a price quotation to your customer" />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <InvoiceForm type="quotation" />
       </div>
     </div>

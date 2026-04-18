@@ -6,9 +6,11 @@ import { FileQuestion, Plus, Search, Eye, Edit2, Trash2, Loader2, ArrowRight, Re
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { useDialog } from '@/components/ui/Dialog'
 
 export default function QuotationsPage() {
   const router = useRouter()
+  const dialog = useDialog()
   const [converting, setConverting] = useState<string | null>(null)
   const [quotations, setQuotations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,14 +36,25 @@ export default function QuotationsPage() {
   useEffect(() => { fetchQuotations() }, [fetchQuotations])
 
   const handleDelete = async (id: string, num: string) => {
-    if (!confirm(`Delete quotation ${num}?`)) return
+    const ok = await dialog.confirm({
+      title: `Delete quotation ${num}?`,
+      message: 'This quotation and its line items will be permanently removed.',
+      confirmLabel: 'Delete quotation',
+      variant: 'danger',
+    })
+    if (!ok) return
     await fetch(`/api/quotations/${id}`, { method: 'DELETE' })
     fetchQuotations()
   }
 
   const handleConvert = async (id: string) => {
     if (converting) return
-    if (!confirm('Convert this quotation to an invoice? You can keep editing the invoice before marking it paid.')) return
+    const ok = await dialog.confirm({
+      title: 'Convert quotation to invoice?',
+      message: 'A new invoice will be created from this quotation. You can keep editing the invoice before marking it paid.',
+      confirmLabel: 'Convert',
+    })
+    if (!ok) return
     setConverting(id)
     try {
       const res = await fetch(`/api/quotations/${id}`, {
@@ -51,7 +64,11 @@ export default function QuotationsPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Conversion failed')
+        await dialog.alert({
+          title: 'Conversion failed',
+          message: data.error || 'The quotation could not be converted.',
+          variant: 'danger',
+        })
         return
       }
       router.push(`/invoices/${data.invoice.id}/edit`)
@@ -68,7 +85,7 @@ export default function QuotationsPage() {
         </Link>
       </PageHeader>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="relative mb-6 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input

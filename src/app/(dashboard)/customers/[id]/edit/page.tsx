@@ -24,7 +24,7 @@ export default function EditCustomerPage() {
   return (
     <div>
       <PageHeader title="Edit Customer" description={`Updating ${customer?.name}`} />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <CustomerForm initialData={customer} />
       </div>
     </div>

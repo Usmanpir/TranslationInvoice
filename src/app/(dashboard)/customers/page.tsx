@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { Users, Plus, Search, Edit2, Trash2, Loader2, Building2, Mail, Phone } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { formatDate } from '@/lib/utils'
+import { useDialog } from '@/components/ui/Dialog'
 
 export default function CustomersPage() {
+  const dialog = useDialog()
   const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -31,7 +33,13 @@ export default function CustomersPage() {
   useEffect(() => { fetchCustomers() }, [fetchCustomers])
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete customer "${name}"? This cannot be undone.`)) return
+    const ok = await dialog.confirm({
+      title: `Delete ${name}?`,
+      message: 'This customer will be permanently removed. This action cannot be undone.',
+      confirmLabel: 'Delete customer',
+      variant: 'danger',
+    })
+    if (!ok) return
     setDeleting(id)
     try {
       await fetch(`/api/customers/${id}`, { method: 'DELETE' })
@@ -50,7 +58,7 @@ export default function CustomersPage() {
         </Link>
       </PageHeader>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Search */}
         <div className="relative mb-6 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

@@ -24,7 +24,7 @@ export default function EditQuotationPage() {
   return (
     <div>
       <PageHeader title="Edit Quotation" description={quotation?.quotationNumber} />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <InvoiceForm type="quotation" initialData={quotation} />
       </div>
     </div>

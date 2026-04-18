@@ -50,21 +50,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-surface-50 overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-brand-200/40 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="absolute -bottom-32 -right-24 w-[420px] h-[420px] rounded-full bg-indigo-200/30 blur-3xl"
+      />
+      <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
+            <div className="w-11 h-11 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/25">
               <FileText className="w-5 h-5 text-white" />
             </div>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">InvoiceFlow</span>
+            <span className="text-2xl font-semibold text-slate-900 tracking-tight">InvoiceFlow</span>
           </div>
-          <h1 className="text-xl font-semibold text-slate-900">Welcome back</h1>
-          <p className="text-sm text-slate-500 mt-1">Sign in to your account</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Welcome back</h1>
+          <p className="text-sm text-slate-500 mt-1.5">Sign in to continue to your workspace</p>
         </div>
 
-        <div className="card p-8">
+        <div className="card p-7 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>

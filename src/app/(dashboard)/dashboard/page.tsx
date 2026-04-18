@@ -107,10 +107,10 @@ export default function DashboardPage() {
         </Link>
       </PageHeader>
 
-      <div className="p-8 space-y-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
         {/* Date range filter */}
         <div className="card p-4 flex flex-wrap items-end gap-3">
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="text-xs font-medium text-slate-500 block mb-1.5">From</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -123,7 +123,7 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="text-xs font-medium text-slate-500 block mb-1.5">To</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />

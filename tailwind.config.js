@@ -37,8 +37,14 @@ module.exports = {
         },
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08)',
-        'card-hover': '0 4px 12px 0 rgb(0 0 0 / 0.12), 0 2px 4px -1px rgb(0 0 0 / 0.08)',
+        'card': '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px -1px rgb(15 23 42 / 0.03)',
+        'card-hover': '0 8px 24px -6px rgb(15 23 42 / 0.10), 0 2px 6px -2px rgb(15 23 42 / 0.06)',
+        'btn': '0 1px 2px 0 rgb(15 23 42 / 0.08), inset 0 1px 0 0 rgb(255 255 255 / 0.08)',
+        'ring-brand': '0 0 0 4px rgb(12 143 233 / 0.18)',
+      },
+      borderRadius: {
+        'xl': '0.85rem',
+        '2xl': '1.1rem',
       },
     },
   },

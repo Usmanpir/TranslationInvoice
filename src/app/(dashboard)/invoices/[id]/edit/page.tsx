@@ -24,7 +24,7 @@ export default function EditInvoicePage() {
   return (
     <div>
       <PageHeader title="Edit Invoice" description={invoice?.invoiceNumber} />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <InvoiceForm type="invoice" initialData={invoice} />
       </div>
     </div>

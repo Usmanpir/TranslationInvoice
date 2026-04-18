@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
+import { useDialog } from '@/components/ui/Dialog'
 
 interface InvoicePDFButtonProps {
   invoice: any
@@ -8,6 +9,7 @@ interface InvoicePDFButtonProps {
 
 export function InvoicePDFButton({ invoice }: InvoicePDFButtonProps) {
   const [loading, setLoading] = useState(false)
+  const dialog = useDialog()
 
   const handleDownload = async () => {
     setLoading(true)
@@ -17,7 +19,11 @@ export function InvoicePDFButton({ invoice }: InvoicePDFButtonProps) {
       await generateInvoicePDF(invoice)
     } catch (err) {
       console.error('PDF generation failed:', err)
-      alert('PDF generation failed. Please try again.')
+      await dialog.alert({
+        title: 'PDF generation failed',
+        message: 'Something went wrong while creating the PDF. Please try again.',
+        variant: 'danger',
+      })
     } finally {
       setLoading(false)
     }

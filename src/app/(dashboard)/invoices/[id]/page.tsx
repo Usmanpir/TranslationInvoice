@@ -10,11 +10,13 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import type { CurrencyCode } from '@/lib/utils'
 import { InvoicePDFButton } from '@/components/pdf/InvoicePDFButton'
 import { PaymentProofModal } from '@/components/PaymentProofModal'
+import { useDialog } from '@/components/ui/Dialog'
 
 export default function InvoiceDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { data: session } = useSession()
+  const dialog = useDialog()
   const [invoice, setInvoice] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -53,7 +55,13 @@ export default function InvoiceDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this invoice?')) return
+    const ok = await dialog.confirm({
+      title: `Delete invoice ${invoice?.invoiceNumber ?? ''}?`,
+      message: 'This invoice and its line items will be permanently removed.',
+      confirmLabel: 'Delete invoice',
+      variant: 'danger',
+    })
+    if (!ok) return
     await fetch(`/api/invoices/${params.id}`, { method: 'DELETE' })
     router.push('/invoices')
   }
@@ -84,7 +92,7 @@ export default function InvoiceDetailPage() {
         {isAdmin && <button onClick={handleDelete} className="btn-danger"><Trash2 className="w-4 h-4" />Delete</button>}
       </PageHeader>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl">
           {invoice.quotation && (
             <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-100 text-sm text-purple-800">

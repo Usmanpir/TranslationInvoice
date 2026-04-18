@@ -79,7 +79,7 @@ export default function ProfilePage() {
   return (
     <div>
       <PageHeader title="Settings" description="Manage your account, company, and payment details" />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-2xl space-y-5">
           {error && <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
           {success && <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">Settings saved successfully!</div>}
