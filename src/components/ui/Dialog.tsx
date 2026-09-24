@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AlertTriangle, Info, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 
 type Variant = 'default' | 'danger' | 'warning' | 'success' | 'info'
 
@@ -51,11 +51,11 @@ function VariantIcon({ variant }: { variant: Variant }) {
     info: { Icon: Info, bg: 'bg-brand-50', color: 'text-brand-600' },
     danger: { Icon: AlertTriangle, bg: 'bg-red-50', color: 'text-red-600' },
     warning: { Icon: AlertTriangle, bg: 'bg-amber-50', color: 'text-amber-600' },
-    success: { Icon: Info, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+    success: { Icon: CheckCircle2, bg: 'bg-emerald-50', color: 'text-emerald-600' },
   }
   const { Icon, bg, color } = map[variant]
   return (
-    <div className={`w-11 h-11 rounded-full ${bg} flex items-center justify-center flex-shrink-0`}>
+    <div className={`relative w-12 h-12 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0 ring-8 ring-white`}>
       <Icon className={`w-5 h-5 ${color}`} />
     </div>
   )
@@ -133,27 +133,27 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
       ? createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in"
               aria-hidden
             />
             <div
               role="dialog"
               aria-modal="true"
               aria-labelledby="dialog-title"
-              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/70"
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
             >
               <button
                 type="button"
                 onClick={() => close(state.kind === 'confirm' ? false : undefined)}
                 aria-label="Close"
-                className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="absolute top-4 right-4 icon-btn"
               >
                 <X className="w-4 h-4" />
               </button>
               <div className="p-6 flex items-start gap-4">
                 <VariantIcon variant={state.variant} />
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <h2 id="dialog-title" className="text-base font-semibold text-slate-900 tracking-tight pr-6">
+                  <h2 id="dialog-title" className="font-display text-lg font-bold text-slate-900 tracking-tight pr-6">
                     {state.title}
                   </h2>
                   {state.message && (
@@ -161,7 +161,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
                   )}
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2 px-6 pb-5 pt-1">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 px-6 py-4 bg-slate-50/70 border-t border-slate-100 rounded-b-3xl">
                 {state.kind === 'confirm' && (
                   <button
                     type="button"

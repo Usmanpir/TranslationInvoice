@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, FileText, Loader2 } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, Sparkles } from 'lucide-react'
+import { AuthShell } from '@/components/auth/AuthShell'
+import { Alert } from '@/components/ui/States'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -50,91 +52,76 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 bg-surface-50 overflow-hidden">
-      <div
-        aria-hidden
-        className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-brand-200/40 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="absolute -bottom-32 -right-24 w-[420px] h-[420px] rounded-full bg-indigo-200/30 blur-3xl"
-      />
-      <div className="relative w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-11 h-11 bg-gradient-to-br from-brand-400 to-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/25">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-semibold text-slate-900 tracking-tight">InvoiceFlow</span>
+    <AuthShell title="Welcome back" subtitle="Sign in to continue to your workspace">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <Alert>{error}</Alert>}
+        <div>
+          <label className="label" htmlFor="email">Email address</label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input h-11 pl-10"
+              placeholder="you@company.com"
+              autoComplete="email"
+              required
+            />
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Welcome back</h1>
-          <p className="text-sm text-slate-500 mt-1.5">Sign in to continue to your workspace</p>
         </div>
-
-        <div className="card p-7 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
-            )}
-            <div>
-              <label className="label">Email address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-                placeholder="you@company.com"
-                required
-              />
-            </div>
-            <div>
-              <label className="label">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input pr-10"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              Sign in
+        <div>
+          <label className="label" htmlFor="password">Password</label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input h-11 pl-10 pr-11"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 icon-btn"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-          </form>
-
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-3 text-xs text-slate-400 bg-white">or</span>
-            </div>
           </div>
+        </div>
+        <button type="submit" disabled={loading} className="btn-primary w-full h-11 group">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          Sign in
+          {!loading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />}
+        </button>
+      </form>
 
-          <button onClick={handleDemo} className="btn-secondary w-full justify-center py-3">
-            Try Demo Account
-          </button>
-
-          <p className="text-center text-sm text-slate-500 mt-5">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-brand-600 font-medium hover:text-brand-700">
-              Create one
-            </Link>
-          </p>
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="px-3 text-xs font-medium text-slate-400 bg-white">or</span>
         </div>
       </div>
-    </div>
+
+      <button onClick={handleDemo} disabled={loading} className="btn-secondary w-full h-11">
+        <Sparkles className="w-4 h-4 text-brand-500" />
+        Try Demo Account
+      </button>
+
+      <p className="text-center text-sm text-slate-500 mt-8">
+        Don't have an account?{' '}
+        <Link href="/register" className="text-brand-600 font-semibold hover:text-brand-700">
+          Create one
+        </Link>
+      </p>
+    </AuthShell>
   )
 }

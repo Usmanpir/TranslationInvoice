@@ -214,7 +214,7 @@ export function DatePicker({
             aria-modal="false"
             aria-label="Choose date"
             style={{ top: coords.top, left: coords.left }}
-            className="fixed z-[70] w-[300px] bg-white rounded-2xl shadow-2xl border border-slate-200/70 p-3 animate-[fadeIn_100ms_ease-out]"
+            className="fixed z-[70] w-[300px] bg-white rounded-2xl shadow-elevated border border-slate-200/70 p-3 animate-scale-in"
             onKeyDown={onKeyNav}
           >
             <div className="flex items-center justify-between mb-2 px-1">
@@ -324,7 +324,7 @@ export function DatePicker({
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((o) => !o)}
         className={cn(
-          'relative w-full h-10 pl-9 pr-8 text-left text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400',
+          'relative w-full h-10 pl-9 pr-8 text-left text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 shadow-[0_1px_2px_0_rgb(15_23_42/0.04)]',
           'hover:border-slate-300 focus:outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 transition-colors',
           disabled && 'opacity-50 cursor-not-allowed',
           className

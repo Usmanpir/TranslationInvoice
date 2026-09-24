@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Loader2, Edit2, Trash2, CheckCircle, XCircle, ArrowLeft, FileCheck, FileQuestion } from 'lucide-react'
+import { Edit2, Trash2, CheckCircle, XCircle, ArrowLeft, FileCheck, FileQuestion, FileX2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -11,6 +11,8 @@ import type { CurrencyCode } from '@/lib/utils'
 import { InvoicePDFButton } from '@/components/pdf/InvoicePDFButton'
 import { PaymentProofModal } from '@/components/PaymentProofModal'
 import { useDialog } from '@/components/ui/Dialog'
+import { EmptyState, PageLoader } from '@/components/ui/States'
+import { LogoMark } from '@/components/ui/Logo'
 
 export default function InvoiceDetailPage() {
   const params = useParams()
@@ -73,10 +75,17 @@ export default function InvoiceDetailPage() {
     router.push('/invoices')
   }
 
-  if (loading) return (
-    <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-brand-600" /></div>
+  if (loading) return <PageLoader label="Loading invoice…" />
+  if (!invoice) return (
+    <div className="p-4 sm:p-6 lg:p-10">
+      <EmptyState
+        icon={FileX2}
+        title="Invoice not found"
+        description="It may have been deleted, or you may not have access to it."
+        action={<Link href="/invoices" className="btn-secondary"><ArrowLeft className="w-4 h-4" />Back to invoices</Link>}
+      />
+    </div>
   )
-  if (!invoice) return <div className="p-8 text-center text-slate-500">Invoice not found</div>
 
   const user = invoice.user
   const customer = invoice.customer
@@ -86,11 +95,11 @@ export default function InvoiceDetailPage() {
       <PageHeader title={invoice.invoiceNumber} description={`Created ${formatDate(invoice.createdAt)}`}>
         <Link href="/invoices" className="btn-secondary"><ArrowLeft className="w-4 h-4" />Back</Link>
         {invoice.status === 'PAID' ? (
-          <button onClick={markUnpaid} className="btn-secondary text-amber-600">
+          <button onClick={markUnpaid} className="btn-secondary text-amber-700 hover:text-amber-800 hover:bg-amber-50 hover:border-amber-200">
             <XCircle className="w-4 h-4" />Mark Unpaid
           </button>
         ) : (
-          <button onClick={() => setShowPaymentModal(true)} className="btn-secondary text-emerald-600">
+          <button onClick={() => setShowPaymentModal(true)} className="btn-secondary text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 hover:border-emerald-200">
             <CheckCircle className="w-4 h-4" />Mark Paid
           </button>
         )}
@@ -99,10 +108,10 @@ export default function InvoiceDetailPage() {
         {isAdmin && <button onClick={handleDelete} className="btn-danger"><Trash2 className="w-4 h-4" />Delete</button>}
       </PageHeader>
 
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl">
+      <div className="p-4 sm:p-6 lg:p-10">
+        <div className="max-w-4xl mx-auto xl:mx-0">
           {invoice.quotation && (
-            <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-purple-50 border border-purple-100 text-sm text-purple-800">
+            <div className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-50 to-violet-50/40 border border-purple-100 text-sm text-purple-800 animate-fade-in">
               <FileQuestion className="w-4 h-4 flex-shrink-0" />
               <span>Converted from quotation</span>
               <Link
@@ -113,21 +122,20 @@ export default function InvoiceDetailPage() {
               </Link>
             </div>
           )}
-          <div className="card p-8 print:shadow-none" id="invoice-print">
+          <div className="relative card overflow-hidden p-5 sm:p-10 shadow-elevated print:shadow-none animate-fade-up" id="invoice-print">
+            <div aria-hidden className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-brand-500 via-indigo-500 to-violet-500" />
 
             {/* Company Logo / Name centered */}
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 mb-1">
-                <div className="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">IF</span>
-                </div>
-                <h2 className="text-xl font-bold text-slate-900">{user?.companyName || user?.name}</h2>
+                <LogoMark className="w-10 h-10" />
+                <h2 className="font-display text-xl font-bold text-slate-900">{user?.companyName || user?.name}</h2>
               </div>
             </div>
 
             {/* Title */}
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 inline-block px-8">
+              <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900 border-b-2 border-slate-200 pb-3 inline-block px-8">
                 Invoice
               </h1>
               <div className="mt-2">
@@ -136,10 +144,10 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* From / To two-column */}
-            <div className="grid grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
               {/* From */}
-              <div className="border border-slate-200 rounded-lg p-4">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">From:</p>
+              <div className="rounded-xl bg-slate-50/70 border border-slate-200/70 p-5">
+                <p className="text-[11px] font-bold text-brand-600 uppercase tracking-[0.1em] mb-2">From:</p>
                 <p className="text-sm font-semibold text-slate-900">{user?.companyName || user?.name}</p>
                 {user?.taxNumber && (
                   <p className="text-xs text-slate-700 font-semibold mt-1">VAT TRN No. {user.taxNumber}</p>
@@ -150,8 +158,8 @@ export default function InvoiceDetailPage() {
               </div>
 
               {/* To */}
-              <div className="border border-slate-200 rounded-lg p-4">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">To:</p>
+              <div className="rounded-xl bg-slate-50/70 border border-slate-200/70 p-5">
+                <p className="text-[11px] font-bold text-brand-600 uppercase tracking-[0.1em] mb-2">To:</p>
                 <p className="text-sm font-semibold text-slate-900">{customer?.name}</p>
                 {customer?.company && <p className="text-xs text-slate-600">{customer.company}</p>}
                 {customer?.taxNumber && (
@@ -164,12 +172,12 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* Invoice Number + Meta row */}
-            <div className="border border-slate-200 rounded-lg p-4 mb-6">
+            <div className="rounded-xl border border-slate-200/80 p-4 sm:p-5 mb-6">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <p className="text-lg font-bold text-slate-900">Invoice # {invoice.invoiceNumber}</p>
+                  <p className="font-display text-lg font-bold text-slate-900">Invoice # <span className="font-mono">{invoice.invoiceNumber}</span></p>
                 </div>
-                <div className="flex gap-8 text-xs text-slate-600">
+                <div className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-slate-600">
                   {invoice.completionDays && (
                     <div><span className="font-semibold text-slate-700">Completion Days:</span> {invoice.completionDays}</div>
                   )}
@@ -183,7 +191,8 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* Items Table */}
-            <table className="w-full mb-6 border border-slate-200">
+            <div className="mb-6 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="text-left text-xs font-bold text-slate-700 uppercase px-4 py-3 border-r border-slate-200">Code</th>
@@ -209,10 +218,11 @@ export default function InvoiceDetailPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Totals */}
             <div className="flex justify-end mb-8">
-              <div className="border border-slate-200 rounded-lg overflow-hidden w-72">
+              <div className="border border-slate-200 rounded-xl overflow-hidden w-full sm:w-80">
                 <div className="flex justify-between px-4 py-2.5 bg-slate-50 text-sm">
                   <span className="text-slate-600">Subtotal</span>
                   <span className="font-medium text-slate-900">{formatCurrency(invoice.subtotal, cur)}</span>
@@ -230,7 +240,7 @@ export default function InvoiceDetailPage() {
                 {user?.taxNumber && (
                   <div className="px-4 py-1 text-[10px] text-slate-400">{user.taxNumber}</div>
                 )}
-                <div className="flex justify-between px-4 py-3 bg-slate-900 text-white font-bold text-base">
+                <div className="flex justify-between px-4 py-3.5 bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold text-base tabular-nums">
                   <span>Total</span>
                   <span>{formatCurrency(invoice.total, cur)}</span>
                 </div>
@@ -239,7 +249,7 @@ export default function InvoiceDetailPage() {
 
             {/* Payment Terms / Bank Details */}
             {(user?.bankName || user?.paypalEmail) && (
-              <div className="border border-slate-200 rounded-lg p-5 mb-6">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 mb-6">
                 <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">Terms</p>
 
                 {user?.bankName && (
@@ -280,7 +290,7 @@ export default function InvoiceDetailPage() {
 
             {/* Payment Proof */}
             {invoice.paymentProof && (
-              <div className="mt-8 pt-6 border-t border-slate-100">
+              <div className="mt-8 pt-6 border-t border-slate-100 print:hidden">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
                   <FileCheck className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
                   Payment Proof
@@ -290,7 +300,7 @@ export default function InvoiceDetailPage() {
                     <img
                       src={invoice.paymentProof}
                       alt="Payment proof"
-                      className="max-h-60 rounded-lg border border-slate-200 object-contain hover:opacity-90 transition-opacity"
+                      className="max-h-60 rounded-xl border border-slate-200 object-contain shadow-card hover:shadow-card-hover transition-shadow"
                     />
                   </a>
                 ) : (
@@ -298,7 +308,7 @@ export default function InvoiceDetailPage() {
                     href={invoice.paymentProof}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-brand-600 hover:bg-slate-100 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-50/60 border border-brand-100 rounded-xl text-sm font-medium text-brand-700 hover:bg-brand-50 transition-colors"
                   >
                     <FileCheck className="w-4 h-4" />
                     View payment proof document

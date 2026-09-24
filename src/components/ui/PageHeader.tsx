@@ -11,13 +11,13 @@ export function PageHeader({ title, description, children, className }: PageHead
   return (
     <div
       className={cn(
-        'lg:sticky lg:top-0 z-20 bg-white/85 backdrop-blur border-b border-slate-200/70',
+        'lg:sticky lg:top-0 z-20 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/70',
         className
       )}
     >
-      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight truncate">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
             {title}
           </h1>
           {description && (
@@ -25,7 +25,7 @@ export function PageHeader({ title, description, children, className }: PageHead
           )}
         </div>
         {children && (
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">{children}</div>
+          <div className="flex items-center gap-2 flex-wrap">{children}</div>
         )}
       </div>
     </div>

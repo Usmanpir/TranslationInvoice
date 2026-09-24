@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { formatDate } from '@/lib/utils'
 import { useDialog } from '@/components/ui/Dialog'
+import { Modal } from '@/components/ui/Modal'
+import { Alert, PageLoader } from '@/components/ui/States'
 import {
   Loader2,
   Plus,
@@ -13,7 +15,6 @@ import {
   Trash2,
   UserPlus,
   Users,
-  X,
   Eye,
   EyeOff,
 } from 'lucide-react'
@@ -117,11 +118,7 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
-      </div>
-    )
+    return <PageLoader label="Loading users…" />
   }
 
   return (
@@ -133,155 +130,121 @@ export default function UsersPage() {
         </button>
       </PageHeader>
 
-      <div className="p-4 sm:p-6 lg:p-8">
-        {error && (
-          <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-6">
-            {error}
-          </div>
-        )}
+      <div className="p-4 sm:p-6 lg:p-10 animate-fade-up">
+        {error && <Alert className="mb-6">{error}</Alert>}
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="card p-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-brand-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{users.length}</p>
-                <p className="text-xs text-slate-500">Total Users</p>
-              </div>
-            </div>
-          </div>
-          <div className="card p-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">
-                  {users.filter((u) => u.role === 'admin').length}
-                </p>
-                <p className="text-xs text-slate-500">Admins</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 mb-8">
+          {[
+            { label: 'Total Users', value: users.length, icon: Users, gradient: 'from-brand-400 to-brand-600' },
+            { label: 'Admins', value: users.filter((u) => u.role === 'admin').length, icon: ShieldCheck, gradient: 'from-amber-400 to-orange-500' },
+            { label: 'Regular Users', value: users.filter((u) => u.role === 'user').length, icon: Shield, gradient: 'from-emerald-400 to-teal-600' },
+          ].map((s) => (
+            <div key={s.label} className="card-interactive p-5">
+              <div className="flex items-center gap-4">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow-lg shadow-slate-900/10 ring-1 ring-inset ring-white/20`}>
+                  <s.icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-display text-2xl font-bold text-slate-900 tabular-nums">{s.value}</p>
+                  <p className="text-xs font-medium text-slate-500">{s.label}</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="card p-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">
-                  {users.filter((u) => u.role === 'user').length}
-                </p>
-                <p className="text-xs text-slate-500">Regular Users</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Users Table */}
         <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  User
-                </th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  Role
-                </th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  Company
-                </th>
-                <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  Data
-                </th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  Joined
-                </th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {users.map((user) => {
-                const isSelf = user.id === session?.user?.id
-                return (
-                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {user.name[0]?.toUpperCase()}
+          <div className="overflow-x-auto">
+            <table className="table-base">
+              <thead>
+                <tr>
+                  <th className="text-left">User</th>
+                  <th className="text-left">Role</th>
+                  <th className="text-left hidden md:table-cell">Company</th>
+                  <th className="text-center hidden lg:table-cell">Data</th>
+                  <th className="text-left hidden md:table-cell">Joined</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const isSelf = user.id === session?.user?.id
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-gradient-to-br from-brand-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-white shadow-sm">
+                            {user.name[0]?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                              <span className="truncate">{user.name}</span>
+                              {isSelf && (
+                                <span className="text-[10px] bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100 px-1.5 py-0.5 rounded-full font-semibold">
+                                  You
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            {user.name}
-                            {isSelf && (
-                              <span className="ml-2 text-[10px] bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded-full font-medium">
-                                You
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-xs text-slate-500">{user.email}</p>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge capitalize ${
+                            user.role === 'admin'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-slate-50 text-slate-600 border-slate-200'
+                          }`}
+                        >
+                          {user.role === 'admin' ? (
+                            <ShieldCheck className="w-3 h-3" />
+                          ) : (
+                            <Shield className="w-3 h-3" />
+                          )}
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="text-sm text-slate-600 hidden md:table-cell">
+                        {user.companyName || '-'}
+                      </td>
+                      <td className="text-center hidden lg:table-cell">
+                        <div className="flex items-center justify-center gap-2 text-xs text-slate-600">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 whitespace-nowrap">{user._count.customers} customers</span>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 whitespace-nowrap">{user._count.invoices} invoices</span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'admin'
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {user.role === 'admin' ? (
-                          <ShieldCheck className="w-3 h-3" />
-                        ) : (
-                          <Shield className="w-3 h-3" />
-                        )}
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      {user.companyName || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-                        <span>{user._count.customers} customers</span>
-                        <span>{user._count.invoices} invoices</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {formatDate(user.createdAt)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => toggleRole(user.id, user.role)}
-                          disabled={isSelf}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={isSelf ? 'Cannot change own role' : `Make ${user.role === 'admin' ? 'user' : 'admin'}`}
-                        >
-                          <ShieldCheck className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteUser(user.id, user.name)}
-                          disabled={isSelf}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={isSelf ? 'Cannot delete own account' : 'Delete user'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="text-sm text-slate-500 hidden md:table-cell whitespace-nowrap">
+                        {formatDate(user.createdAt)}
+                      </td>
+                      <td>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => toggleRole(user.id, user.role)}
+                            disabled={isSelf}
+                            className="icon-btn hover:text-amber-600 hover:bg-amber-50"
+                            title={isSelf ? 'Cannot change own role' : `Make ${user.role === 'admin' ? 'user' : 'admin'}`}
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteUser(user.id, user.name)}
+                            disabled={isSelf}
+                            className="icon-btn hover:text-red-600 hover:bg-red-50"
+                            title={isSelf ? 'Cannot delete own account' : 'Delete user'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -346,21 +309,9 @@ function AddUserModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Add New User</h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
-            </div>
-          )}
+    <Modal title="Add New User" description="Create an account and assign a role" icon={UserPlus} onClose={onClose}>
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+          {error && <Alert>{error}</Alert>}
 
           <div>
             <label className="label">Full name</label>
@@ -393,7 +344,7 @@ function AddUserModal({
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="input pr-10"
+                className="input pr-11"
                 placeholder="Min. 8 characters"
                 required
                 minLength={8}
@@ -401,7 +352,8 @@ function AddUserModal({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 icon-btn"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -421,7 +373,7 @@ function AddUserModal({
           </div>
 
           <div>
-            <label className="label">Company name (optional)</label>
+            <label className="label">Company name <span className="font-normal text-slate-400">(optional)</span></label>
             <input
               type="text"
               value={formData.companyName}
@@ -432,16 +384,15 @@ function AddUserModal({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
+            <button type="submit" disabled={loading} className="btn-primary flex-1">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Create User
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

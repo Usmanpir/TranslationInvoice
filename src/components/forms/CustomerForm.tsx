@@ -1,7 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save, UserRound, Building2 } from 'lucide-react'
+import { Alert } from '@/components/ui/States'
+import { FormSection } from './FormSection'
 
 interface CustomerFormProps {
   initialData?: {
@@ -61,10 +63,10 @@ export function CustomerForm({ initialData }: CustomerFormProps) {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }))
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl">
-      {error && <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-5 animate-fade-up">
+      {error && <Alert>{error}</Alert>}
 
-      <div className="card p-6 space-y-5">
+      <FormSection icon={UserRound} title="Contact" description="How you reach this customer">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label">Full name *</label>
@@ -74,37 +76,39 @@ export function CustomerForm({ initialData }: CustomerFormProps) {
             <label className="label">Email address *</label>
             <input type="email" value={formData.email} onChange={update('email')} className="input" placeholder="john@company.com" required />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
+          <div className="sm:col-span-2 sm:max-w-[calc(50%-0.5rem)]">
             <label className="label">Phone *</label>
             <input type="tel" value={formData.phone} onChange={update('phone')} className="input" placeholder="+1 (555) 000-0000" required />
           </div>
+        </div>
+      </FormSection>
+
+      <FormSection icon={Building2} title="Business" description="Shown on invoices and quotations">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Company</label>
+              <input type="text" value={formData.company} onChange={update('company')} className="input" placeholder="Company Inc." />
+            </div>
+            <div>
+              <label className="label">Tax / VAT number</label>
+              <input type="text" value={formData.taxNumber} onChange={update('taxNumber')} className="input" placeholder="TAX-123456789" />
+            </div>
+          </div>
           <div>
-            <label className="label">Company</label>
-            <input type="text" value={formData.company} onChange={update('company')} className="input" placeholder="Company Inc." />
+            <label className="label">Address</label>
+            <textarea
+              value={formData.address}
+              onChange={update('address')}
+              className="input resize-none"
+              rows={3}
+              placeholder="123 Business St, City, State ZIP"
+            />
           </div>
         </div>
+      </FormSection>
 
-        <div>
-          <label className="label">Tax / VAT number</label>
-          <input type="text" value={formData.taxNumber} onChange={update('taxNumber')} className="input" placeholder="TAX-123456789" />
-        </div>
-
-        <div>
-          <label className="label">Address</label>
-          <textarea
-            value={formData.address}
-            onChange={update('address')}
-            className="input resize-none"
-            rows={3}
-            placeholder="123 Business St, City, State ZIP"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 mt-5">
+      <div className="flex items-center gap-3 pt-1">
         <button type="submit" disabled={loading} className="btn-primary">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {initialData?.id ? 'Update Customer' : 'Create Customer'}
