@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
   --bg-app: #f7f8fb;
   --border-soft: #eef1f5;
   --ring-brand: rgb(12 143 233 / 0.18);

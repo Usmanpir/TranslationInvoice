@@ -15,7 +15,9 @@
       "Bash(python -c ' *)",
       "Bash(node mshots.js)",
       "Bash(node shots.js app)",
-      "Bash(node shots.js dash)"
+      "Bash(node shots.js dash)",
+      "Bash(NEXTAUTH_URL= npm run build)",
+      "Bash(NEXTAUTH_URL= NEXTAUTH_URL_INTERNAL= npm run build)"
     ]
   }
 }
