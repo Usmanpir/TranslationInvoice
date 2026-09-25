@@ -1,29 +1,43 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Users } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { CustomerForm } from '@/components/forms/CustomerForm'
-import { PageLoader } from '@/components/ui/States'
+import { EmptyState, PageLoader } from '@/components/ui/States'
+import { api, errorMessage } from '@/lib/api-client'
 
 export default function EditCustomerPage() {
-  const params = useParams()
-  const [customer, setCustomer] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const params = useParams<{ id: string }>()
+  const [record, setRecord] = useState<any>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch(`/api/customers/${params.id}`)
-      .then((r) => r.json())
-      .then(setCustomer)
-      .finally(() => setLoading(false))
+    api(`/api/customers/${params.id}`)
+      .then(setRecord)
+      .catch((e) => setError(errorMessage(e, 'Could not load this customer.')))
   }, [params.id])
 
-  if (loading) return <PageLoader label="Loading customer…" />
+  if (error) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-10">
+        <EmptyState
+          icon={Users}
+          title="Customer not available"
+          description={error}
+          action={<Link href="/customers" className="btn-secondary"><ArrowLeft className="w-4 h-4" />Back</Link>}
+        />
+      </div>
+    )
+  }
+  if (!record) return <PageLoader label="Loading customer…" />
 
   return (
     <div>
-      <PageHeader title="Edit Customer" description={`Updating ${customer?.name}`} />
+      <PageHeader title="Edit Customer" description={`Updating ${record.name}`} />
       <div className="p-4 sm:p-6 lg:p-10">
-        <CustomerForm initialData={customer} />
+        <CustomerForm initialData={record} />
       </div>
     </div>
   )

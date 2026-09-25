@@ -1,71 +1,124 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
+import { route, parseJson } from '@/lib/server/api'
+import { requireOrganization } from '@/lib/server/context'
+import { ApiError, notFound } from '@/lib/server/errors'
+import { audit } from '@/lib/server/audit'
+import { customerSchema } from '@/lib/server/schemas'
 
-const customerSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().min(1, 'Phone is required'),
-  address: z.string().optional(),
-  company: z.string().optional(),
-  taxNumber: z.string().optional(),
+type Params = { id: string }
+
+async function findCustomer(organizationId: string, id: string) {
+  const customer = await prisma.customer.findFirst({ where: { id, organizationId } })
+  if (!customer) throw notFound('Customer')
+  return customer
+}
+
+export const GET = route<Params>(async (_request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'customer.view' })
+  const orgId = ctx.organization.id
+  const customer = await findCustomer(orgId, id)
+
+  const [invoices, quotations, payments, byStatus] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { organizationId: orgId, customerId: id },
+      orderBy: { issueDate: 'desc' },
+      take: 50,
+      select: { id: true, invoiceNumber: true, status: true, issueDate: true, dueDate: true, total: true, currency: true },
+    }),
+    prisma.quotation.findMany({
+      where: { organizationId: orgId, customerId: id },
+      orderBy: { issueDate: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        quotationNumber: true,
+        status: true,
+        issueDate: true,
+        validUntil: true,
+        total: true,
+        currency: true,
+        invoice: { select: { id: true, invoiceNumber: true } },
+      },
+    }),
+    prisma.payment.findMany({
+      where: { organizationId: orgId, invoice: { customerId: id } },
+      orderBy: { paidAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        method: true,
+        paidAt: true,
+        reference: true,
+        invoice: { select: { id: true, invoiceNumber: true } },
+      },
+    }),
+    prisma.invoice.groupBy({
+      by: ['status', 'currency'],
+      where: { organizationId: orgId, customerId: id },
+      _sum: { total: true },
+      _count: { _all: true },
+    }),
+  ])
+
+  // Totals per currency — amounts in different currencies are never summed together.
+  const summary: Record<string, { paid: number; pending: number; overdue: number }> = {}
+  let totalInvoices = 0
+  for (const row of byStatus) {
+    totalInvoices += row._count._all
+    const s = (summary[row.currency] ??= { paid: 0, pending: 0, overdue: 0 })
+    const sum = row._sum.total ?? 0
+    if (row.status === 'PAID') s.paid += sum
+    else if (row.status === 'PENDING') s.pending += sum
+    else if (row.status === 'OVERDUE') s.overdue += sum
+  }
+
+  return { ...customer, stats: { totalInvoices, totalQuotations: quotations.length, byCurrency: summary }, invoices, quotations, payments }
 })
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const PUT = route<Params>(async (request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'customer.manage', write: true })
+  await findCustomer(ctx.organization.id, id)
+  const data = await parseJson(request, customerSchema)
 
-    const customer = await prisma.customer.findFirst({
-      where: { id: params.id, userId: session.user.id },
-      include: {
-        invoices: { orderBy: { createdAt: 'desc' }, take: 5 },
-        _count: { select: { invoices: true } },
-      },
-    })
+  const updated = await prisma.customer.update({ where: { id }, data })
+  await audit({
+    organizationId: ctx.organization.id,
+    userId: ctx.user.id,
+    action: 'customer.updated',
+    entityType: 'customer',
+    entityId: id,
+  })
+  return updated
+})
 
-    if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-    return NextResponse.json(customer)
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export const DELETE = route<Params>(async (_request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'customer.delete', write: true })
+  const customer = await findCustomer(ctx.organization.id, id)
+
+  const [invoiceCount, quotationCount] = await Promise.all([
+    prisma.invoice.count({ where: { customerId: id } }),
+    prisma.quotation.count({ where: { customerId: id } }),
+  ])
+  if (invoiceCount + quotationCount > 0) {
+    throw new ApiError(
+      'CONFLICT',
+      `${customer.name} has ${invoiceCount} invoice(s) and ${quotationCount} quotation(s). Delete those first to keep your records consistent.`
+    )
   }
-}
 
-export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const body = await request.json()
-    const data = customerSchema.parse(body)
-
-    const customer = await prisma.customer.findFirst({ where: { id: params.id, userId: session.user.id } })
-    if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-
-    const updated = await prisma.customer.update({ where: { id: params.id }, data })
-    return NextResponse.json(updated)
-  } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const customer = await prisma.customer.findFirst({ where: { id: params.id, userId: session.user.id } })
-    if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-
-    await prisma.customer.delete({ where: { id: params.id } })
-    return NextResponse.json({ message: 'Customer deleted' })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  await prisma.customer.delete({ where: { id } })
+  await audit({
+    organizationId: ctx.organization.id,
+    userId: ctx.user.id,
+    action: 'customer.deleted',
+    entityType: 'customer',
+    entityId: id,
+    metadata: { name: customer.name },
+  })
+  return { id }
+})

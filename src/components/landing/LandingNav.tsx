@@ -6,9 +6,10 @@ import { Logo } from '@/components/ui/Logo'
 import { cn } from '@/lib/utils'
 
 const links = [
-  { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#workflow' },
-  { label: 'Details', href: '#details' },
+  { label: 'Features', href: '/features' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'How it works', href: '/#workflow' },
+  { label: 'FAQ', href: '/#faq' },
 ]
 
 export function LandingNav() {
@@ -38,13 +39,13 @@ export function LandingNav() {
 
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               className="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-900/[0.04] transition-colors"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -53,7 +54,7 @@ export function LandingNav() {
             Sign in
           </Link>
           <Link href="/register" className="btn-dark group">
-            Get started
+            Start free trial
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
@@ -72,18 +73,18 @@ export function LandingNav() {
       {open && (
         <div className="md:hidden mx-auto max-w-6xl mt-2 p-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/70 shadow-elevated animate-scale-in">
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
               className="block px-4 py-3 text-sm font-medium text-slate-700 rounded-xl hover:bg-slate-50"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
           <div className="grid grid-cols-2 gap-2 p-2 pt-3 mt-1 border-t border-slate-100">
             <Link href="/login" className="btn-secondary">Sign in</Link>
-            <Link href="/register" className="btn-primary">Get started</Link>
+            <Link href="/register" className="btn-primary">Start free trial</Link>
           </div>
         </div>
       )}

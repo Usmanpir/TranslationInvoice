@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Save, UserRound, Building2 } from 'lucide-react'
 import { Alert } from '@/components/ui/States'
+import { api, ApiRequestError } from '@/lib/api-client'
+import { useFeedback } from '@/components/providers/FeedbackProvider'
 import { FormSection } from './FormSection'
 
 interface CustomerFormProps {
@@ -19,6 +21,7 @@ interface CustomerFormProps {
 
 export function CustomerForm({ initialData }: CustomerFormProps) {
   const router = useRouter()
+  const { handleError, toast } = useFeedback()
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     email: initialData?.email || '',
@@ -34,26 +37,18 @@ export function CustomerForm({ initialData }: CustomerFormProps) {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     const isEdit = !!initialData?.id
-    const url = isEdit ? `/api/customers/${initialData.id}` : '/api/customers'
-    const method = isEdit ? 'PUT' : 'POST'
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const saved = await api<{ id: string; name: string }>(isEdit ? `/api/customers/${initialData!.id}` : '/api/customers', {
+        method: isEdit ? 'PUT' : 'POST',
+        body: formData,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to save customer')
-      } else {
-        router.push('/customers')
-        router.refresh()
-      }
-    } catch {
-      setError('Something went wrong')
+      toast.success(isEdit ? `${saved.name} updated.` : `${saved.name} added.`)
+      router.push(`/customers/${saved.id}`)
+      router.refresh()
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.code === 'VALIDATION_ERROR') setError(err.message)
+      else handleError(err)
     } finally {
       setLoading(false)
     }

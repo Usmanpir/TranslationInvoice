@@ -1,12 +1,13 @@
 import { PageHeader } from '@/components/ui/PageHeader'
 import { InvoiceForm } from '@/components/forms/InvoiceForm'
 
-export default function NewInvoicePage() {
+export default async function NewInvoicePage({ searchParams }: { searchParams: Promise<{ customerId?: string }> }) {
+  const { customerId } = await searchParams
   return (
     <div>
       <PageHeader title="Create Invoice" description="Generate a new invoice for your customer" />
       <div className="p-4 sm:p-6 lg:p-10">
-        <InvoiceForm type="invoice" />
+        <InvoiceForm type="invoice" defaultCustomerId={customerId} />
       </div>
     </div>
   )

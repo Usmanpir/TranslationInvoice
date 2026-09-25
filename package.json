@@ -8,11 +8,16 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:integration": "dotenv -e .env.local -- vitest run tests/integration",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:reset": "dotenv -e .env.local -- prisma migrate reset",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "db:deploy": "prisma migrate deploy",
+    "db:deploy:local": "dotenv -e .env.local -- prisma migrate deploy"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
@@ -31,6 +36,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
+    "server-only": "^0.0.1",
+    "stripe": "^17.7.0",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.23.8"
   },
@@ -40,10 +47,12 @@
     "@types/react": "^18.3.14",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
+    "dotenv-cli": "^11.0.0",
     "postcss": "^8.4.49",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.16",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.9"
   }
 }

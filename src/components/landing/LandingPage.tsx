@@ -16,24 +16,29 @@ import {
   Sparkles,
   Upload,
   Users,
+  UsersRound,
+  Wallet,
+  Building2,
 } from 'lucide-react'
-import { Logo } from '@/components/ui/Logo'
-import { LandingNav } from './LandingNav'
+import { MarketingShell } from '@/components/marketing/MarketingShell'
+import { MarketingPricing } from '@/components/marketing/MarketingPricing'
+import { Faq } from '@/components/marketing/faq'
+import { TRIAL } from '@/lib/plans'
 import { HeroMockup } from './HeroMockup'
 import { Reveal } from './Reveal'
 
 export function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-white text-slate-900 overflow-x-clip">
-      <LandingNav />
+    <MarketingShell>
       <Hero />
-      <Highlights />
+      <Benefits />
       <Features />
       <Workflow />
       <Details />
+      <Pricing />
+      <FaqSection />
       <FinalCta />
-      <Footer />
-    </div>
+    </MarketingShell>
   )
 }
 
@@ -56,7 +61,7 @@ function Hero() {
             <span className="flex items-center justify-center w-5 h-5 -ml-1.5 rounded-full bg-gradient-to-br from-brand-500 to-indigo-600">
               <Sparkles className="w-3 h-3 text-white" />
             </span>
-            Quotations, invoices &amp; payments in one place
+            {TRIAL.days}-day free trial · no card required
           </span>
         </div>
 
@@ -64,7 +69,7 @@ function Hero() {
           className="mt-7 font-display text-[2.6rem] leading-[1.05] sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.035em] text-slate-900 animate-fade-up"
           style={{ animationDelay: '80ms' }}
         >
-          Quote it. <span className="whitespace-nowrap">Invoice it.</span>
+          Create professional invoices.
           <br />
           <span className="text-gradient">Get paid faster.</span>
         </h1>
@@ -73,8 +78,8 @@ function Hero() {
           className="mt-6 mx-auto max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed animate-fade-up"
           style={{ animationDelay: '160ms' }}
         >
-          InvoiceFlow brings your customers, quotations and VAT-ready invoices into one beautifully simple
-          workspace — so you spend less time on paperwork and more time on the work that pays.
+          InvoiceFlow brings your customers, quotations, VAT-ready invoices and payments into one secure workspace
+          for your whole team — so you spend less time on paperwork and more time on the work that pays.
         </p>
 
         <div
@@ -82,11 +87,11 @@ function Hero() {
           style={{ animationDelay: '240ms' }}
         >
           <Link href="/register" className="btn-primary btn-lg w-full sm:w-auto group">
-            Create your free account
+            Start Free Trial
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
-          <Link href="/login" className="btn-secondary btn-lg w-full sm:w-auto">
-            Try the live demo
+          <Link href="/pricing" className="btn-secondary btn-lg w-full sm:w-auto">
+            View Pricing
           </Link>
         </div>
 
@@ -112,21 +117,25 @@ function Hero() {
 
 /* ------------------------------------------------------------------ */
 
-function Highlights() {
+function Benefits() {
   const items = [
-    { value: '3', label: 'Currencies built in', sub: 'AED · USD · EUR' },
-    { value: '1-click', label: 'Quote → invoice', sub: 'No re-typing line items' },
-    { value: 'PDF', label: 'Branded exports', sub: 'Ready to send instantly' },
-    { value: '2 roles', label: 'Team access', sub: 'Admins & members' },
+    { icon: Receipt, label: 'Professional invoices', sub: 'Branded, VAT-ready PDFs' },
+    { icon: FileQuestion, label: 'Easy quotations', sub: 'Convert to invoice in one click' },
+    { icon: Wallet, label: 'Payment tracking', sub: 'Know who paid and who is late' },
+    { icon: Percent, label: 'VAT-ready', sub: 'TRN, rates & VAT summary' },
+    { icon: UsersRound, label: 'Team collaboration', sub: 'Roles for sales & accounts' },
+    { icon: ShieldCheck, label: 'Secure cloud platform', sub: 'Isolated, encrypted workspaces' },
   ]
   return (
     <section className="relative border-y border-slate-100 bg-slate-50/50">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 grid grid-cols-2 lg:grid-cols-4 gap-y-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {items.map((it, i) => (
-          <Reveal key={it.label} delay={i * 80} className="text-center px-4 lg:border-l first:border-0 border-slate-200/80">
-            <div className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">{it.value}</div>
-            <div className="mt-1 text-sm font-semibold text-slate-700">{it.label}</div>
-            <div className="text-xs text-slate-400 mt-0.5">{it.sub}</div>
+          <Reveal key={it.label} delay={i * 60} className="text-center">
+            <div className="mx-auto w-10 h-10 rounded-xl bg-white ring-1 ring-slate-200 shadow-card flex items-center justify-center">
+              <it.icon className="w-[18px] h-[18px] text-brand-600" />
+            </div>
+            <div className="mt-3 text-sm font-semibold text-slate-900">{it.label}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{it.sub}</div>
           </Reveal>
         ))}
       </div>
@@ -259,8 +268,8 @@ function Features() {
             <FeatureCard
               icon={BarChart3}
               color="from-indigo-400 to-indigo-600"
-              title="A dashboard that tells the story"
-              desc="Revenue, pending and overdue totals at a glance, filterable by any date range."
+              title="Reports that tell the story"
+              desc="Revenue trends, aged receivables and a VAT summary, plus a live dashboard filterable by any date range."
               className="h-full"
             >
               <div className="mt-6 flex items-center gap-2 text-xs">
@@ -276,7 +285,7 @@ function Features() {
               icon={ShieldCheck}
               color="from-slate-600 to-slate-900"
               title="Team access with roles"
-              desc="Admins manage users, roles and every record; members focus on their own customers and documents."
+              desc="Invite your team as Admins, Accountants, Sales or Viewers, and each role sees exactly what it needs."
               className="h-full"
             >
               <div className="mt-6 flex -space-x-2">
@@ -329,39 +338,26 @@ function FeatureCard({
 
 function Workflow() {
   const steps = [
-    {
-      n: '01',
-      icon: FileQuestion,
-      title: 'Send a quotation',
-      desc: 'Pick a customer, add line items, set VAT and validity. Your quote is ready in under a minute.',
-    },
-    {
-      n: '02',
-      icon: ArrowRightLeft,
-      title: 'Convert to invoice',
-      desc: 'Once accepted, convert it with one click. Everything carries over — just review and send.',
-    },
-    {
-      n: '03',
-      icon: CheckCircle2,
-      title: 'Mark it paid',
-      desc: 'Upload the payment proof, mark the invoice paid, and watch your dashboard update instantly.',
-    },
+    { n: '01', icon: Building2, title: 'Create your business', desc: 'Sign up, add your logo, TRN and bank details. Your workspace is ready in minutes.' },
+    { n: '02', icon: Users, title: 'Add customers', desc: 'Keep contacts, companies, addresses and tax numbers in one searchable directory.' },
+    { n: '03', icon: FileQuestion, title: 'Create a quotation', desc: 'Add line items, VAT and discounts, then download a polished PDF.' },
+    { n: '04', icon: ArrowRightLeft, title: 'Convert to invoice', desc: 'Once accepted, turn it into a numbered invoice with one click. Nothing retyped.' },
+    { n: '05', icon: CheckCircle2, title: 'Track payment', desc: 'Record payments and proofs, chase overdue invoices and watch revenue grow.' },
   ]
   return (
     <section id="workflow" className="relative py-24 sm:py-32 bg-slate-50/60 border-y border-slate-100 scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeading
           eyebrow="How it works"
-          title="From quote to paid in three steps"
+          title="From signup to paid in five steps"
           desc="A workflow that mirrors how you already do business — just faster, tidier and with nothing lost in between."
         />
 
-        <div className="relative mt-16 grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div aria-hidden className="hidden md:block absolute top-[52px] left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-brand-300 to-transparent" />
+        <div className="relative mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+          <div aria-hidden className="hidden lg:block absolute top-[52px] left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-brand-300 to-transparent" />
           {steps.map((s, i) => (
             <Reveal key={s.n} delay={i * 120} className="relative">
-              <div className="h-full rounded-3xl bg-white border border-slate-200/80 p-7 shadow-card text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+              <div className="h-full rounded-3xl bg-white border border-slate-200/80 p-6 shadow-card text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
                 <div className="relative mx-auto w-14 h-14">
                   <div className="absolute inset-0 rounded-2xl bg-brand-500/20 blur-lg" />
                   <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center ring-4 ring-white shadow-lg shadow-brand-600/30">
@@ -369,7 +365,7 @@ function Workflow() {
                   </div>
                 </div>
                 <div className="mt-5 font-mono text-xs font-medium text-brand-600">STEP {s.n}</div>
-                <h3 className="mt-1.5 font-display text-xl font-bold text-slate-900 tracking-tight">{s.title}</h3>
+                <h3 className="mt-1.5 font-display text-lg font-bold text-slate-900 tracking-tight">{s.title}</h3>
                 <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">{s.desc}</p>
               </div>
             </Reveal>
@@ -464,6 +460,43 @@ function Details() {
 
 /* ------------------------------------------------------------------ */
 
+function Pricing() {
+  return (
+    <section id="pricing" className="relative py-24 sm:py-32 scroll-mt-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <SectionHeading
+          eyebrow="Pricing"
+          title="Simple plans that grow with you"
+          desc={`Start with a ${TRIAL.days}-day free trial. Stay on Free as long as you like, or upgrade when your business needs more.`}
+        />
+        <div className="mt-14">
+          <MarketingPricing />
+        </div>
+        <p className="mt-8 text-center">
+          <Link href="/pricing" className="text-sm font-semibold text-brand-600 hover:text-brand-700">
+            Compare all features →
+          </Link>
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function FaqSection() {
+  return (
+    <section id="faq" className="relative py-24 sm:py-28 bg-slate-50/60 border-y border-slate-100 scroll-mt-20">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <SectionHeading eyebrow="FAQ" title="Questions, answered" desc="Everything you need to know before you start." />
+        <div className="mt-12">
+          <Faq />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
 function FinalCta() {
   return (
     <section className="relative py-24 sm:py-32">
@@ -475,17 +508,17 @@ function FinalCta() {
             <div aria-hidden className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-violet-400/20 blur-3xl" />
             <div className="relative">
               <h2 className="font-display text-3xl sm:text-5xl font-extrabold tracking-[-0.03em] text-white">
-                Ready to get paid faster?
+                Start managing your invoices today.
               </h2>
               <p className="mt-4 mx-auto max-w-xl text-base sm:text-lg text-brand-100/90 leading-relaxed">
-                Set up your workspace in minutes and send your first professional invoice today.
+                Set up your workspace in minutes. Free for {TRIAL.days} days, no card required.
               </p>
               <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/register"
                   className="btn btn-lg w-full sm:w-auto bg-white text-brand-700 shadow-xl shadow-brand-900/20 hover:bg-brand-50 hover:-translate-y-px group"
                 >
-                  Get started — it&apos;s free
+                  Start free trial
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
@@ -500,29 +533,5 @@ function FinalCta() {
         </Reveal>
       </div>
     </section>
-  )
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-slate-100">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex flex-col items-center sm:items-start gap-2">
-          <Logo markClassName="w-8 h-8 rounded-[10px]" />
-          <p className="text-xs text-slate-400">Bills, invoices &amp; quotations — beautifully simple.</p>
-        </div>
-        <nav className="flex items-center gap-6 text-sm text-slate-500">
-          <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-          <a href="#workflow" className="hover:text-slate-900 transition-colors">How it works</a>
-          <Link href="/login" className="hover:text-slate-900 transition-colors">Sign in</Link>
-          <Link href="/register" className="hover:text-slate-900 transition-colors">Register</Link>
-        </nav>
-      </div>
-      <div className="border-t border-slate-100">
-        <p className="mx-auto max-w-6xl px-4 sm:px-6 py-5 text-xs text-slate-400 text-center sm:text-left">
-          © {new Date().getFullYear()} InvoiceFlow. All rights reserved.
-        </p>
-      </div>
-    </footer>
   )
 }
