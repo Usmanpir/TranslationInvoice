@@ -17,7 +17,9 @@
       "Bash(node shots.js app)",
       "Bash(node shots.js dash)",
       "Bash(NEXTAUTH_URL= npm run build)",
-      "Bash(NEXTAUTH_URL= NEXTAUTH_URL_INTERNAL= npm run build)"
+      "Bash(NEXTAUTH_URL= NEXTAUTH_URL_INTERNAL= npm run build)",
+      "PowerShell($p = \\(Get-NetTCPConnection -LocalPort 3055 -State Listen -ErrorAction SilentlyContinue\\).OwningProcess; if \\($p\\) { Stop-Process -Id $p -Force }; \"stopped: $p\")",
+      "PowerShell($p = \\(Get-NetTCPConnection -LocalPort 3056 -State Listen -ErrorAction SilentlyContinue\\).OwningProcess; if \\($p\\) { Stop-Process -Id $p -Force }; \"stopped: $p\")"
     ]
   }
 }
