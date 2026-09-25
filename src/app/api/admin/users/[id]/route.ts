@@ -15,7 +15,8 @@ const updateUserSchema = z.object({
 })
 
 // PUT /api/admin/users/[id] - Update user role/details (admin only)
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id || !isAdmin(session.user.role)) {
@@ -52,7 +53,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 }
 
 // DELETE /api/admin/users/[id] - Delete a user (admin only)
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id || !isAdmin(session.user.role)) {

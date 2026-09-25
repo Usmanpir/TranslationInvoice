@@ -8,7 +8,8 @@ function stripExt(raw: string) {
   return i > 0 ? raw.slice(0, i) : raw
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
