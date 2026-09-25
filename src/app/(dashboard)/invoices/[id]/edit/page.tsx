@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { InvoiceForm } from '@/components/forms/InvoiceForm'
-import { Loader2 } from 'lucide-react'
+import { PageLoader } from '@/components/ui/States'
 
 export default function EditInvoicePage() {
   const params = useParams()
@@ -17,14 +17,12 @@ export default function EditInvoicePage() {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  if (loading) return (
-    <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-brand-600" /></div>
-  )
+  if (loading) return <PageLoader label="Loading invoice…" />
 
   return (
     <div>
       <PageHeader title="Edit Invoice" description={invoice?.invoiceNumber} />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-10">
         <InvoiceForm type="invoice" initialData={invoice} />
       </div>
     </div>

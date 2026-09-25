@@ -1,8 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Loader2, Save, User, Building2 } from 'lucide-react'
+import { Loader2, Save, User, Lock } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Alert } from '@/components/ui/States'
+import { FormSection } from '@/components/forms/FormSection'
 
 export default function ProfilePage() {
   const { data: session, update } = useSession()
@@ -12,6 +14,13 @@ export default function ProfilePage() {
     address: '',
     phone: '',
     taxNumber: '',
+    bankName: '',
+    bankBranch: '',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    iban: '',
+    swiftCode: '',
+    paypalEmail: '',
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -28,6 +37,13 @@ export default function ProfilePage() {
             address: data.address || '',
             phone: data.phone || '',
             taxNumber: data.taxNumber || '',
+            bankName: data.bankName || '',
+            bankBranch: data.bankBranch || '',
+            bankAccountName: data.bankAccountName || '',
+            bankAccountNumber: data.bankAccountNumber || '',
+            iban: data.iban || '',
+            swiftCode: data.swiftCode || '',
+            paypalEmail: data.paypalEmail || '',
           })
         })
     }
@@ -62,21 +78,40 @@ export default function ProfilePage() {
   const update2 = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setFormData((prev) => ({ ...prev, [field]: e.target.value }))
 
+  const initial = (formData.name || session?.user?.name || '?')[0]?.toUpperCase()
+
   return (
     <div>
-      <PageHeader title="Settings" description="Manage your account and company details" />
-      <div className="p-8">
-        <div className="max-w-2xl space-y-5">
-          {error && <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
-          {success && <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">Settings saved successfully!</div>}
+      <PageHeader title="Settings" description="Manage your account, company, and payment details" />
+      <div className="p-4 sm:p-6 lg:p-10">
+        <div className="max-w-2xl space-y-5 animate-fade-up">
+          {/* Profile banner */}
+          <div className="card overflow-hidden">
+            <div className="relative h-24 bg-gradient-to-r from-brand-500 via-indigo-500 to-violet-500">
+              <div aria-hidden className="absolute inset-0 bg-grid-dark opacity-50" />
+            </div>
+            <div className="relative px-5 sm:px-6 pb-5 flex items-end gap-4">
+              <div className="relative -mt-10 flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-indigo-600 ring-4 ring-white shadow-elevated flex items-center justify-center text-white font-display text-2xl font-bold">
+                {initial}
+              </div>
+              <div className="min-w-0 pb-1">
+                <p className="font-display text-lg font-bold text-slate-900 truncate">{formData.name || session?.user?.name}</p>
+                <p className="text-sm text-slate-500 truncate">{session?.user?.email}</p>
+              </div>
+              {session?.user?.role && (
+                <span className="ml-auto mb-1.5 badge bg-slate-50 text-slate-600 border-slate-200 capitalize">
+                  {session.user.role}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {error && <Alert>{error}</Alert>}
+          {success && <Alert variant="success">Settings saved successfully!</Alert>}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Personal Info */}
-            <div className="card p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <User className="w-4 h-4 text-slate-500" />
-                <h3 className="text-sm font-semibold text-slate-700">Personal Information</h3>
-              </div>
+            <FormSection icon={User} title="Personal Information" description="Your name as it appears across the app">
               <div className="space-y-4">
                 <div>
                   <label className="label">Full name</label>
@@ -84,39 +119,14 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="label">Email address</label>
-                  <input type="email" value={session?.user?.email || ''} className="input opacity-60 cursor-not-allowed" disabled />
-                  <p className="text-xs text-slate-400 mt-1">Email cannot be changed</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Company Info */}
-            <div className="card p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Building2 className="w-4 h-4 text-slate-500" />
-                <h3 className="text-sm font-semibold text-slate-700">Company Details</h3>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="label">Company name</label>
-                  <input type="text" value={formData.companyName} onChange={update2('companyName')} className="input" placeholder="Company Inc." />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label">Phone</label>
-                    <input type="tel" value={formData.phone} onChange={update2('phone')} className="input" placeholder="+1 (555) 000-0000" />
+                  <div className="relative">
+                    <input type="email" value={session?.user?.email || ''} className="input pr-10 cursor-not-allowed" disabled />
+                    <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                   </div>
-                  <div>
-                    <label className="label">Tax / VAT Number</label>
-                    <input type="text" value={formData.taxNumber} onChange={update2('taxNumber')} className="input" placeholder="TAX-123456789" />
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Address</label>
-                  <textarea value={formData.address} onChange={update2('address')} className="input resize-none" rows={3} placeholder="123 Business St, City, State ZIP" />
+                  <p className="hint">Email cannot be changed</p>
                 </div>
               </div>
-            </div>
+            </FormSection>
 
             <button type="submit" disabled={loading} className="btn-primary">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}

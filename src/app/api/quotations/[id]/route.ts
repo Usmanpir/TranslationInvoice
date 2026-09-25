@@ -12,14 +12,25 @@ const updateSchema = z.object({
   status: z.enum(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'CONVERTED']).optional(),
 })
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const quotation = await prisma.quotation.findFirst({
       where: { id: params.id, userId: session.user.id },
-      include: { customer: true, items: true, user: true },
+      include: {
+        customer: true,
+        items: true,
+        user: {
+          select: {
+            name: true, email: true, companyName: true, address: true, phone: true,
+            taxNumber: true, bankName: true, bankBranch: true, bankAccountName: true,
+            bankAccountNumber: true, iban: true, swiftCode: true, paypalEmail: true,
+          },
+        },
+      },
     })
 
     if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 })
@@ -29,7 +40,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -51,35 +63,41 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
       const items = await prisma.quotationItem.findMany({ where: { quotationId: params.id } })
 
-      const invoice = await prisma.invoice.create({
-        data: {
-          invoiceNumber,
-          customerId: quotation.customerId,
-          userId: session.user.id,
-          dueDate,
-          notes: quotation.notes,
-          taxRate: quotation.taxRate,
-          discount: quotation.discount,
-          subtotal: quotation.subtotal,
-          taxAmount: quotation.taxAmount,
-          discountAmount: quotation.discountAmount,
-          total: quotation.total,
-          items: {
-            create: items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-            })),
+      const [invoice] = await prisma.$transaction([
+        prisma.invoice.create({
+          data: {
+            invoiceNumber,
+            customerId: quotation.customerId,
+            userId: quotation.userId,
+            quotationId: quotation.id,
+            dueDate,
+            notes: quotation.notes,
+            currency: quotation.currency,
+            salesperson: quotation.salesperson,
+            completionDays: quotation.completionDays,
+            taxRate: quotation.taxRate,
+            discount: quotation.discount,
+            subtotal: quotation.subtotal,
+            taxAmount: quotation.taxAmount,
+            discountAmount: quotation.discountAmount,
+            total: quotation.total,
+            items: {
+              create: items.map((item) => ({
+                code: item.code,
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total,
+              })),
+            },
           },
-        },
-        include: { customer: true, items: true },
-      })
-
-      await prisma.quotation.update({
-        where: { id: params.id },
-        data: { status: 'CONVERTED', convertedToInvoice: true },
-      })
+          include: { customer: true, items: true },
+        }),
+        prisma.quotation.update({
+          where: { id: params.id },
+          data: { status: 'CONVERTED', convertedToInvoice: true },
+        }),
+      ])
 
       return NextResponse.json({ invoice, message: 'Quotation converted to invoice' })
     }
@@ -104,7 +122,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

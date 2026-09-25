@@ -6,10 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
+export const CURRENCIES = {
+  USD: { code: 'USD', symbol: '$', label: 'US Dollar (USD)', locale: 'en-US' },
+  EUR: { code: 'EUR', symbol: '€', label: 'Euro (EUR)', locale: 'de-DE' },
+  AED: { code: 'AED', symbol: 'AED', label: 'AED (Dirham)', locale: 'ar-AE' },
+} as const
+
+export type CurrencyCode = keyof typeof CURRENCIES
+
+export function formatCurrency(amount: number, currency: CurrencyCode = 'AED'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 2,
   }).format(amount)
 }

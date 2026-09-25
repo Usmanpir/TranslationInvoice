@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Test-NetConnection pooled.db.prisma.io -Port 5432)",
+      "Bash(xargs wc -l)",
+      "Bash(sort -k2)",
+      "Bash(python -)",
+      "Bash(python \"C:/Users/USER/AppData/Local/Temp/claude/c--Users-USER-Downloads-Personal-Projects-invoiceflow-invoiceflow/5ce9a8b1-684b-4595-b143-302fd34b9c11/scratchpad/users_patch.py\")",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/Microsoft/Edge/Application/**)",
+      "Read(//c/Users/USER/AppData/Local/ms-playwright/**)",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(ls -d ~/AppData/Local/npm-cache/_npx/*/node_modules/playwright* 2>/dev/null | head)",
+      "Read(//c/Users/USER/AppData/Local/npm-cache/_npx/**)",
+      "Bash(node shots.js public)",
+      "Bash(python -c ' *)",
+      "Bash(node mshots.js)",
+      "Bash(node shots.js app)",
+      "Bash(node shots.js dash)"
+    ]
+  }
+}

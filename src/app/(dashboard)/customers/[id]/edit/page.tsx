@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { CustomerForm } from '@/components/forms/CustomerForm'
-import { Loader2 } from 'lucide-react'
+import { PageLoader } from '@/components/ui/States'
 
 export default function EditCustomerPage() {
   const params = useParams()
@@ -17,14 +17,12 @@ export default function EditCustomerPage() {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  if (loading) return (
-    <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-brand-600" /></div>
-  )
+  if (loading) return <PageLoader label="Loading customer…" />
 
   return (
     <div>
       <PageHeader title="Edit Customer" description={`Updating ${customer?.name}`} />
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-10">
         <CustomerForm initialData={customer} />
       </div>
     </div>
