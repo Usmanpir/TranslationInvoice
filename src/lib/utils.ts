@@ -6,48 +6,59 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Add a currency here (and nowhere else) to support it across forms, PDFs and validation.
 export const CURRENCIES = {
+  AED: { code: 'AED', symbol: 'AED', label: 'AED (Dirham)', locale: 'ar-AE' },
   USD: { code: 'USD', symbol: '$', label: 'US Dollar (USD)', locale: 'en-US' },
   EUR: { code: 'EUR', symbol: '€', label: 'Euro (EUR)', locale: 'de-DE' },
-  AED: { code: 'AED', symbol: 'AED', label: 'AED (Dirham)', locale: 'ar-AE' },
 } as const
 
 export type CurrencyCode = keyof typeof CURRENCIES
+export const CURRENCY_CODES = Object.keys(CURRENCIES) as [CurrencyCode, ...CurrencyCode[]]
 
-export function formatCurrency(amount: number, currency: CurrencyCode = 'AED'): string {
+export function isCurrencyCode(value: string): value is CurrencyCode {
+  return value in CURRENCIES
+}
+
+export function formatCurrency(amount: number, currency: string = 'AED'): string {
+  const code = isCurrencyCode(currency) ? currency : 'AED'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency: code,
     minimumFractionDigits: 2,
   }).format(amount)
 }
 
-export function formatDate(date: Date | string): string {
-  return format(new Date(date), 'MMM dd, yyyy')
+export function formatDate(date: Date | string, pattern = 'MMM dd, yyyy'): string {
+  return format(new Date(date), pattern)
 }
 
-export function generateInvoiceNumber(prefix: string = 'INV'): string {
-  const year = new Date().getFullYear()
-  const random = Math.floor(Math.random() * 90000) + 10000
-  return `${prefix}-${year}-${random}`
-}
+const round2 = (n: number) => Math.round(n * 100) / 100
 
+/**
+ * Document totals.
+ * - Exclusive (default): tax is added on top of the discounted subtotal.
+ * - Inclusive: line prices already contain tax; the tax portion is extracted.
+ * `subtotal` is always the plain sum of line totals.
+ */
 export function calculateInvoiceTotals(
   items: { quantity: number; unitPrice: number }[],
   taxRate: number = 0,
-  discount: number = 0
+  discount: number = 0,
+  taxInclusive: boolean = false
 ) {
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const discountAmount = subtotal * (discount / 100)
   const afterDiscount = subtotal - discountAmount
-  const taxAmount = afterDiscount * (taxRate / 100)
-  const total = afterDiscount + taxAmount
+
+  const taxAmount = taxInclusive ? afterDiscount - afterDiscount / (1 + taxRate / 100) : afterDiscount * (taxRate / 100)
+  const total = taxInclusive ? afterDiscount : afterDiscount + taxAmount
 
   return {
-    subtotal: Math.round(subtotal * 100) / 100,
-    discountAmount: Math.round(discountAmount * 100) / 100,
-    taxAmount: Math.round(taxAmount * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    subtotal: round2(subtotal),
+    discountAmount: round2(discountAmount),
+    taxAmount: round2(taxAmount),
+    total: round2(total),
   }
 }
 

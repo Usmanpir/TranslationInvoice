@@ -1,114 +1,110 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import type { Prisma, QuotationStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { generateInvoiceNumber, calculateInvoiceTotals } from '@/lib/utils'
-import { z } from 'zod'
+import { route, parseJson, parsePagination, paginated } from '@/lib/server/api'
+import { requireOrganization } from '@/lib/server/context'
+import { checkUsageLimit } from '@/lib/server/subscription'
+import { audit } from '@/lib/server/audit'
+import { createWithDocumentNumber } from '@/lib/server/numbering'
+import {
+  assertCurrencyAllowed,
+  assertCustomerInOrg,
+  buildLineItems,
+  computeTotals,
+  dateString,
+  documentFieldsSchema,
+} from '@/lib/server/documents'
 
-const itemSchema = z.object({
-  code: z.string().optional().default(''),
-  description: z.string().min(1),
-  quantity: z.number().min(0.01),
-  unitPrice: z.number().min(0),
+const createSchema = documentFieldsSchema.extend({
+  validUntil: dateString,
+  issueDate: dateString.optional(),
 })
 
-const quotationSchema = z.object({
-  customerId: z.string().min(1),
-  validUntil: z.string(),
-  notes: z.string().optional(),
-  currency: z.enum(['USD', 'EUR', 'AED']).default('AED'),
-  salesperson: z.string().optional(),
-  completionDays: z.string().optional(),
-  taxRate: z.number().min(0).max(100).default(0),
-  discount: z.number().min(0).max(100).default(0),
-  items: z.array(itemSchema).min(1),
-})
+const STATUSES: QuotationStatus[] = ['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'CONVERTED']
 
-export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const GET = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'quotation.view' })
+  const url = new URL(request.url)
+  const p = parsePagination(url)
+  const search = (url.searchParams.get('search') || '').trim().slice(0, 100)
+  const status = url.searchParams.get('status') as QuotationStatus | null
+  const customerId = url.searchParams.get('customerId')
 
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search') || ''
-    const status = searchParams.get('status') || ''
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
-
-    const where: any = { userId: session.user.id }
-    if (status) where.status = status
-    if (search) {
-      where.OR = [
+  const where: Prisma.QuotationWhereInput = {
+    organizationId: ctx.organization.id,
+    ...(status && STATUSES.includes(status) && { status }),
+    ...(customerId && { customerId }),
+    ...(search && {
+      OR: [
         { quotationNumber: { contains: search, mode: 'insensitive' } },
         { customer: { name: { contains: search, mode: 'insensitive' } } },
-      ]
-    }
-
-    const [quotations, total] = await Promise.all([
-      prisma.quotation.findMany({
-        where,
-        include: {
-          customer: true,
-          items: true,
-          invoice: { select: { id: true, invoiceNumber: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.quotation.count({ where }),
-    ])
-
-    return NextResponse.json({ quotations, total, pages: Math.ceil(total / limit), page })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+        { customer: { company: { contains: search, mode: 'insensitive' } } },
+      ],
+    }),
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const body = await request.json()
-    const { customerId, validUntil, notes, currency, salesperson, completionDays, taxRate, discount, items } = quotationSchema.parse(body)
-
-    const customer = await prisma.customer.findFirst({ where: { id: customerId, userId: session.user.id } })
-    if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-
-    const totals = calculateInvoiceTotals(items, taxRate, discount)
-    const quotationNumber = generateInvoiceNumber('QUO')
-
-    const quotation = await prisma.quotation.create({
-      data: {
-        quotationNumber,
-        customerId,
-        userId: session.user.id,
-        validUntil: new Date(validUntil),
-        notes,
-        currency,
-        salesperson,
-        completionDays,
-        taxRate,
-        discount,
-        ...totals,
-        items: {
-          create: items.map((item) => ({
-            code: item.code || null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.quantity * item.unitPrice,
-          })),
-        },
+  const [quotations, total] = await Promise.all([
+    prisma.quotation.findMany({
+      where,
+      include: {
+        customer: { select: { id: true, name: true, company: true } },
+        invoice: { select: { id: true, invoiceNumber: true } },
       },
-      include: { customer: true, items: true },
-    })
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.limit,
+    }),
+    prisma.quotation.count({ where }),
+  ])
 
-    return NextResponse.json(quotation, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return paginated(quotations, total, p)
+})
+
+export const POST = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'quotation.create', write: true })
+  const orgId = ctx.organization.id
+  const data = await parseJson(request, createSchema)
+
+  await checkUsageLimit(ctx, 'quotations')
+  await assertCustomerInOrg(orgId, data.customerId)
+  assertCurrencyAllowed(ctx, data.currency)
+
+  const totals = computeTotals(data)
+  const issueDate = data.issueDate ? new Date(data.issueDate) : new Date()
+
+  const quotation = await createWithDocumentNumber(
+    orgId,
+    'quotation',
+    (tx, quotationNumber) =>
+      tx.quotation.create({
+        data: {
+          organizationId: orgId,
+          quotationNumber,
+          customerId: data.customerId,
+          userId: ctx.user.id,
+          issueDate,
+          validUntil: new Date(data.validUntil),
+          notes: data.notes,
+          currency: data.currency,
+          salesperson: data.salesperson,
+          completionDays: data.completionDays,
+          taxRate: data.taxRate,
+          taxInclusive: data.taxInclusive ?? false,
+          discount: data.discount,
+          ...totals,
+          items: { create: buildLineItems(data.items) },
+        },
+        include: { customer: true, items: true },
+      }),
+    { date: issueDate }
+  )
+
+  await audit({
+    organizationId: orgId,
+    userId: ctx.user.id,
+    action: 'quotation.created',
+    entityType: 'quotation',
+    entityId: quotation.id,
+    metadata: { quotationNumber: quotation.quotationNumber, total: quotation.total, currency: quotation.currency },
+  })
+  return quotation
+})

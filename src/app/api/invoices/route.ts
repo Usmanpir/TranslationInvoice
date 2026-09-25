@@ -1,120 +1,131 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import type { Prisma, InvoiceStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { generateInvoiceNumber, calculateInvoiceTotals } from '@/lib/utils'
-import { z } from 'zod'
+import { route, parseJson, parsePagination, paginated } from '@/lib/server/api'
+import { requireOrganization } from '@/lib/server/context'
+import { checkUsageLimit } from '@/lib/server/subscription'
+import { audit } from '@/lib/server/audit'
+import { createWithDocumentNumber } from '@/lib/server/numbering'
+import { syncOverdueInvoices } from '@/lib/server/invoices'
+import {
+  assertCurrencyAllowed,
+  assertCustomerInOrg,
+  buildLineItems,
+  computeTotals,
+  dateString,
+  documentFieldsSchema,
+} from '@/lib/server/documents'
 
-const itemSchema = z.object({
-  code: z.string().optional().default(''),
-  description: z.string().min(1),
-  quantity: z.number().min(0.01),
-  unitPrice: z.number().min(0),
+const createSchema = documentFieldsSchema.extend({
+  dueDate: dateString,
+  issueDate: dateString.optional(),
 })
 
-const invoiceSchema = z.object({
-  customerId: z.string().min(1),
-  dueDate: z.string(),
-  notes: z.string().optional(),
-  currency: z.enum(['USD', 'EUR', 'AED']).default('AED'),
-  salesperson: z.string().optional(),
-  completionDays: z.string().optional(),
-  taxRate: z.number().min(0).max(100).default(0),
-  discount: z.number().min(0).max(100).default(0),
-  items: z.array(itemSchema).min(1, 'At least one item required'),
-})
+const STATUSES: InvoiceStatus[] = ['PENDING', 'PAID', 'OVERDUE', 'CANCELLED']
 
-export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+function parseDate(value: string | null, endOfDay = false) {
+  if (!value) return null
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  if (endOfDay) d.setHours(23, 59, 59, 999)
+  return d
+}
 
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search') || ''
-    const status = searchParams.get('status') || ''
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
+export const GET = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'invoice.view' })
+  const orgId = ctx.organization.id
+  await syncOverdueInvoices(orgId)
 
-    const isAdmin = session.user.role === 'admin'
-    const where: any = isAdmin ? {} : { userId: session.user.id }
-    if (status) where.status = status
-    if (search) {
-      where.OR = [
+  const url = new URL(request.url)
+  const p = parsePagination(url)
+  const q = url.searchParams
+  const search = (q.get('search') || '').trim().slice(0, 100)
+  const status = q.get('status') as InvoiceStatus | null
+  const from = parseDate(q.get('from'))
+  const to = parseDate(q.get('to'), true)
+  const min = q.get('min') ? Number(q.get('min')) : null
+  const max = q.get('max') ? Number(q.get('max')) : null
+  const customerId = q.get('customerId')
+
+  const where: Prisma.InvoiceWhereInput = {
+    organizationId: orgId,
+    ...(status && STATUSES.includes(status) && { status }),
+    ...(customerId && { customerId }),
+    ...((from || to) && { issueDate: { ...(from && { gte: from }), ...(to && { lte: to }) } }),
+    ...((Number.isFinite(min) || Number.isFinite(max)) && {
+      total: { ...(Number.isFinite(min) && { gte: min! }), ...(Number.isFinite(max) && { lte: max! }) },
+    }),
+    ...(search && {
+      OR: [
         { invoiceNumber: { contains: search, mode: 'insensitive' } },
         { customer: { name: { contains: search, mode: 'insensitive' } } },
-      ]
-    }
-
-    const [invoices, total] = await Promise.all([
-      prisma.invoice.findMany({
-        where,
-        include: {
-          customer: true,
-          items: true,
-          ...(isAdmin && {
-            user: { select: { id: true, name: true, email: true, companyName: true } },
-          }),
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.invoice.count({ where }),
-    ])
-
-    return NextResponse.json({ invoices, total, pages: Math.ceil(total / limit), page })
-  } catch (error) {
-    console.error('Get invoices error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+        { customer: { company: { contains: search, mode: 'insensitive' } } },
+      ],
+    }),
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const body = await request.json()
-    const { customerId, dueDate, notes, currency, salesperson, completionDays, taxRate, discount, items } = invoiceSchema.parse(body)
-
-    // Verify customer belongs to user
-    const customer = await prisma.customer.findFirst({ where: { id: customerId, userId: session.user.id } })
-    if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
-
-    const totals = calculateInvoiceTotals(items, taxRate, discount)
-    const invoiceNumber = generateInvoiceNumber('INV')
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        customerId,
-        userId: session.user.id,
-        dueDate: new Date(dueDate),
-        notes,
-        currency,
-        salesperson,
-        completionDays,
-        taxRate,
-        discount,
-        ...totals,
-        items: {
-          create: items.map((item) => ({
-            code: item.code || null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.quantity * item.unitPrice,
-          })),
-        },
+  const [invoices, total] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      include: {
+        customer: { select: { id: true, name: true, company: true } },
+        user: { select: { id: true, name: true } },
       },
-      include: { customer: true, items: true },
-    })
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.limit,
+    }),
+    prisma.invoice.count({ where }),
+  ])
 
-    return NextResponse.json(invoice, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-    console.error('Create invoice error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return paginated(invoices, total, p)
+})
+
+export const POST = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'invoice.create', write: true })
+  const orgId = ctx.organization.id
+  const data = await parseJson(request, createSchema)
+
+  await checkUsageLimit(ctx, 'invoices')
+  await assertCustomerInOrg(orgId, data.customerId)
+  assertCurrencyAllowed(ctx, data.currency)
+
+  const totals = computeTotals(data)
+  const issueDate = data.issueDate ? new Date(data.issueDate) : new Date()
+
+  const invoice = await createWithDocumentNumber(
+    orgId,
+    'invoice',
+    (tx, invoiceNumber) =>
+      tx.invoice.create({
+        data: {
+          organizationId: orgId,
+          invoiceNumber,
+          customerId: data.customerId,
+          userId: ctx.user.id,
+          issueDate,
+          dueDate: new Date(data.dueDate),
+          notes: data.notes,
+          currency: data.currency,
+          salesperson: data.salesperson,
+          completionDays: data.completionDays,
+          taxRate: data.taxRate,
+          taxInclusive: data.taxInclusive ?? false,
+          discount: data.discount,
+          ...totals,
+          items: { create: buildLineItems(data.items) },
+        },
+        include: { customer: true, items: true },
+      }),
+    { date: issueDate }
+  )
+
+  await audit({
+    organizationId: orgId,
+    userId: ctx.user.id,
+    action: 'invoice.created',
+    entityType: 'invoice',
+    entityId: invoice.id,
+    metadata: { invoiceNumber: invoice.invoiceNumber, total: invoice.total, currency: invoice.currency },
+  })
+  return invoice
+})

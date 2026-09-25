@@ -1,43 +1,48 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { route, parseJson } from '@/lib/server/api'
+import { assertNotDemoUser, requireAuth } from '@/lib/server/context'
 
-export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+const DATE_FORMATS = ['MMM dd, yyyy', 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd'] as const
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true, name: true, email: true, companyName: true, address: true,
-      phone: true, taxNumber: true, bankName: true, bankBranch: true,
-      bankAccountName: true, bankAccountNumber: true, iban: true,
-      swiftCode: true, paypalEmail: true,
-    },
-  })
-  return NextResponse.json(user)
-}
+const profileSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120),
+  phone: z.string().trim().max(50).optional().nullable().transform((v) => v || null),
+  locale: z.enum(['en', 'ar']).optional(),
+  timezone: z
+    .string()
+    .max(64)
+    .refine((tz) => {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: tz })
+        return true
+      } catch {
+        return false
+      }
+    }, 'Unknown timezone')
+    .optional(),
+  dateFormat: z.enum(DATE_FORMATS).optional(),
+})
 
-export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+const select = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  locale: true,
+  timezone: true,
+  dateFormat: true,
+  createdAt: true,
+} as const
 
-  const body = await request.json()
-  const {
-    name, companyName, address, phone, taxNumber,
-    bankName, bankBranch, bankAccountName, bankAccountNumber,
-    iban, swiftCode, paypalEmail,
-  } = body
+export const GET = route(async () => {
+  const user = await requireAuth()
+  return prisma.user.findUnique({ where: { id: user.id }, select })
+})
 
-  const user = await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      name, companyName, address, phone, taxNumber,
-      bankName, bankBranch, bankAccountName, bankAccountNumber,
-      iban, swiftCode, paypalEmail,
-    },
-    select: { id: true, name: true, email: true, companyName: true },
-  })
-  return NextResponse.json(user)
-}
+export const PUT = route(async (request) => {
+  const user = await requireAuth()
+  assertNotDemoUser(user)
+  const data = await parseJson(request, profileSchema)
+  return prisma.user.update({ where: { id: user.id }, data, select })
+})

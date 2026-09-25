@@ -1,14 +1,33 @@
 'use client'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, Sparkles } from 'lucide-react'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { Alert } from '@/components/ui/States'
 
+/** Only same-site relative paths are accepted as post-login destinations (no open redirects). */
+function safeCallback(raw: string | null) {
+  return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard'
+}
+
+function friendlyError(code: string | undefined) {
+  if (!code || code === 'CredentialsSignin') return 'Invalid email or password'
+  return code
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const callbackUrl = safeCallback(useSearchParams().get('callbackUrl'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -22,9 +41,9 @@ export default function LoginPage() {
     try {
       const result = await signIn('credentials', { email, password, redirect: false })
       if (result?.error) {
-        setError('Invalid email or password')
+        setError(friendlyError(result.error))
       } else {
-        router.push('/dashboard')
+        router.push(callbackUrl)
         router.refresh()
       }
     } catch {
@@ -48,6 +67,7 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       router.push('/dashboard')
+      router.refresh()
     }
   }
 
@@ -72,7 +92,12 @@ export default function LoginPage() {
           </div>
         </div>
         <div>
-          <label className="label" htmlFor="password">Password</label>
+          <div className="flex items-center justify-between">
+            <label className="label" htmlFor="password">Password</label>
+            <Link href="/forgot-password" className="text-xs font-medium text-brand-600 hover:text-brand-700 mb-1.5">
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input

@@ -20,7 +20,8 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (typeof IntersectionObserver === 'undefined') {
+    // Show immediately when observers are unavailable or the element is already on screen.
+    if (typeof IntersectionObserver === 'undefined' || el.getBoundingClientRect().top < window.innerHeight) {
       setVisible(true)
       return
     }
@@ -31,7 +32,8 @@ export function Reveal({
           io.disconnect()
         }
       },
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+      // Any visible pixel triggers the reveal, so tall sections can never stay hidden.
+      { rootMargin: '0px 0px -5% 0px', threshold: 0 }
     )
     io.observe(el)
     return () => io.disconnect()

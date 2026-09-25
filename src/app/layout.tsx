@@ -1,14 +1,42 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 // Self-hosted fonts (bundled from npm) so builds never depend on Google Fonts being reachable.
 import '@fontsource-variable/inter'
 import '@fontsource-variable/plus-jakarta-sans'
 import '@fontsource-variable/jetbrains-mono'
 import './globals.css'
 import { Providers } from './providers'
+import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'InvoiceFlow – Bills, Invoices & Quotations',
-  description: 'Professional invoice and quotation management system',
+  metadataBase: new URL(siteUrl()),
+  title: {
+    default: `${SITE_NAME} – Professional Invoices & Quotations for UAE Businesses`,
+    template: `%s`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ['invoicing software', 'UAE VAT invoice', 'quotation software', 'TRN invoice', 'invoice generator Dubai', 'billing software'],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} – Create professional invoices. Get paid faster.`,
+    description: SITE_DESCRIPTION,
+    url: '/',
+    locale: 'en_AE',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} – Create professional invoices. Get paid faster.`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0070c7',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

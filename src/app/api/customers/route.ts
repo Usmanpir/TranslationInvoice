@@ -1,76 +1,57 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
+import { route, parseJson, parsePagination, paginated } from '@/lib/server/api'
+import { requireOrganization } from '@/lib/server/context'
+import { checkUsageLimit } from '@/lib/server/subscription'
+import { audit } from '@/lib/server/audit'
+import { customerSchema } from '@/lib/server/schemas'
 
-const customerSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
-  phone: z.string().min(1, 'Phone is required'),
-  address: z.string().optional(),
-  company: z.string().optional(),
-  taxNumber: z.string().optional(),
+export const GET = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'customer.view' })
+  const url = new URL(request.url)
+  const p = parsePagination(url)
+  const search = (url.searchParams.get('search') || '').trim().slice(0, 100)
+
+  const where: Prisma.CustomerWhereInput = {
+    organizationId: ctx.organization.id,
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { company: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+  }
+
+  const [customers, total] = await Promise.all([
+    prisma.customer.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.limit,
+      include: { _count: { select: { invoices: true } } },
+    }),
+    prisma.customer.count({ where }),
+  ])
+
+  return paginated(customers, total, p)
 })
 
-export async function GET(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export const POST = route(async (request) => {
+  const ctx = await requireOrganization({ permission: 'customer.manage', write: true })
+  const data = await parseJson(request, customerSchema)
+  await checkUsageLimit(ctx, 'customers')
 
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search') || ''
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
-
-    const where = {
-      userId: session.user.id,
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { email: { contains: search, mode: 'insensitive' as const } },
-          { company: { contains: search, mode: 'insensitive' as const } },
-        ],
-      }),
-    }
-
-    const [customers, total] = await Promise.all([
-      prisma.customer.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: { _count: { select: { invoices: true } } },
-      }),
-      prisma.customer.count({ where }),
-    ])
-
-    return NextResponse.json({ customers, total, pages: Math.ceil(total / limit), page })
-  } catch (error) {
-    console.error('Get customers error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const body = await request.json()
-    const data = customerSchema.parse(body)
-
-    const customer = await prisma.customer.create({
-      data: { ...data, userId: session.user.id },
-    })
-
-    return NextResponse.json(customer, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-    }
-    console.error('Create customer error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  const customer = await prisma.customer.create({
+    data: { ...data, organizationId: ctx.organization.id, userId: ctx.user.id },
+  })
+  await audit({
+    organizationId: ctx.organization.id,
+    userId: ctx.user.id,
+    action: 'customer.created',
+    entityType: 'customer',
+    entityId: customer.id,
+    metadata: { name: customer.name },
+  })
+  return customer
+})

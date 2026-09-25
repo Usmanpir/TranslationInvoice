@@ -1,139 +1,129 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { generateInvoiceNumber } from '@/lib/utils'
 import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { route, parseJson } from '@/lib/server/api'
+import { requireOrganization } from '@/lib/server/context'
+import { badRequest, notFound } from '@/lib/server/errors'
+import { hasFeature } from '@/lib/server/subscription'
+import { audit } from '@/lib/server/audit'
+import { notify } from '@/lib/server/notifications'
+import {
+  assertCurrencyAllowed,
+  assertCustomerInOrg,
+  buildLineItems,
+  computeTotals,
+  dateString,
+  documentFieldsSchema,
+  issuerFor,
+} from '@/lib/server/documents'
 
-const updateSchema = z.object({
-  customerId: z.string().optional(),
-  validUntil: z.string().optional(),
-  notes: z.string().optional(),
-  status: z.enum(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'CONVERTED']).optional(),
+type Params = { id: string }
+
+const updateSchema = documentFieldsSchema.partial().extend({
+  validUntil: dateString.optional(),
+  issueDate: dateString.optional(),
+  // CONVERTED is set only by the convert endpoint.
+  status: z.enum(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED']).optional(),
 })
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+async function findQuotation(organizationId: string, id: string) {
+  const quotation = await prisma.quotation.findFirst({ where: { id, organizationId } })
+  if (!quotation) throw notFound('Quotation')
+  return quotation
+}
 
-    const quotation = await prisma.quotation.findFirst({
-      where: { id: params.id, userId: session.user.id },
-      include: {
-        customer: true,
-        items: true,
-        user: {
-          select: {
-            name: true, email: true, companyName: true, address: true, phone: true,
-            taxNumber: true, bankName: true, bankBranch: true, bankAccountName: true,
-            bankAccountNumber: true, iban: true, swiftCode: true, paypalEmail: true,
-          },
-        },
-      },
+export const GET = route<Params>(async (_request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'quotation.view' })
+  const quotation = await prisma.quotation.findFirst({
+    where: { id, organizationId: ctx.organization.id },
+    include: {
+      customer: true,
+      items: true,
+      invoice: { select: { id: true, invoiceNumber: true } },
+      user: { select: { id: true, name: true } },
+    },
+  })
+  if (!quotation) throw notFound('Quotation')
+  return { ...quotation, issuer: issuerFor(ctx.organization, hasFeature(ctx, 'customBranding')) }
+})
+
+export const PUT = route<Params>(async (request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'quotation.edit', write: true })
+  const orgId = ctx.organization.id
+  const quotation = await findQuotation(orgId, id)
+  const data = await parseJson(request, updateSchema)
+
+  if (quotation.convertedToInvoice && (data.items || data.status)) {
+    throw badRequest('This quotation was already converted to an invoice. Edit the invoice instead.')
+  }
+  if (data.customerId && data.customerId !== quotation.customerId) await assertCustomerInOrg(orgId, data.customerId)
+  if (data.currency) assertCurrencyAllowed(ctx, data.currency, quotation.currency)
+
+  const totals = data.items
+    ? computeTotals({
+        items: data.items,
+        taxRate: data.taxRate ?? quotation.taxRate,
+        discount: data.discount ?? quotation.discount,
+        taxInclusive: data.taxInclusive ?? quotation.taxInclusive,
+      })
+    : {}
+
+  const updated = await prisma.quotation.update({
+    where: { id },
+    data: {
+      ...(data.customerId && { customerId: data.customerId }),
+      ...(data.validUntil && { validUntil: new Date(data.validUntil) }),
+      ...(data.issueDate && { issueDate: new Date(data.issueDate) }),
+      ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.status && { status: data.status }),
+      ...(data.currency && { currency: data.currency }),
+      ...(data.salesperson !== undefined && { salesperson: data.salesperson }),
+      ...(data.completionDays !== undefined && { completionDays: data.completionDays }),
+      ...(data.taxRate !== undefined && { taxRate: data.taxRate }),
+      ...(data.taxInclusive !== undefined && { taxInclusive: data.taxInclusive }),
+      ...(data.discount !== undefined && { discount: data.discount }),
+      ...totals,
+      ...(data.items && { items: { deleteMany: {}, create: buildLineItems(data.items) } }),
+    },
+    include: { customer: true, items: true },
+  })
+
+  if (data.status === 'ACCEPTED' && quotation.status !== 'ACCEPTED') {
+    await notify({
+      organizationId: orgId,
+      type: 'quotation.accepted',
+      permission: 'quotation.view',
+      title: `${quotation.quotationNumber} was accepted`,
+      body: 'Convert it to an invoice when you are ready.',
+      link: `/quotations/${id}`,
     })
-
-    if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 })
-    return NextResponse.json(quotation)
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
 
-export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  await audit({
+    organizationId: orgId,
+    userId: ctx.user.id,
+    action: 'quotation.updated',
+    entityType: 'quotation',
+    entityId: id,
+    metadata: { quotationNumber: quotation.quotationNumber, fields: Object.keys(data) },
+  })
+  return updated
+})
 
-    const quotation = await prisma.quotation.findFirst({ where: { id: params.id, userId: session.user.id } })
-    if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 })
+export const DELETE = route<Params>(async (_request, { params }) => {
+  const { id } = await params
+  const ctx = await requireOrganization({ permission: 'quotation.delete', write: true })
+  const quotation = await findQuotation(ctx.organization.id, id)
 
-    const body = await request.json()
-
-    // Handle convert action
-    if (body.action === 'convert') {
-      if (quotation.convertedToInvoice) {
-        return NextResponse.json({ error: 'Already converted to invoice' }, { status: 400 })
-      }
-
-      const invoiceNumber = generateInvoiceNumber('INV')
-      const dueDate = new Date()
-      dueDate.setDate(dueDate.getDate() + 30)
-
-      const items = await prisma.quotationItem.findMany({ where: { quotationId: params.id } })
-
-      const [invoice] = await prisma.$transaction([
-        prisma.invoice.create({
-          data: {
-            invoiceNumber,
-            customerId: quotation.customerId,
-            userId: quotation.userId,
-            quotationId: quotation.id,
-            dueDate,
-            notes: quotation.notes,
-            currency: quotation.currency,
-            salesperson: quotation.salesperson,
-            completionDays: quotation.completionDays,
-            taxRate: quotation.taxRate,
-            discount: quotation.discount,
-            subtotal: quotation.subtotal,
-            taxAmount: quotation.taxAmount,
-            discountAmount: quotation.discountAmount,
-            total: quotation.total,
-            items: {
-              create: items.map((item) => ({
-                code: item.code,
-                description: item.description,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                total: item.total,
-              })),
-            },
-          },
-          include: { customer: true, items: true },
-        }),
-        prisma.quotation.update({
-          where: { id: params.id },
-          data: { status: 'CONVERTED', convertedToInvoice: true },
-        }),
-      ])
-
-      return NextResponse.json({ invoice, message: 'Quotation converted to invoice' })
-    }
-
-    const { customerId, validUntil, notes, status } = updateSchema.parse(body)
-
-    const updated = await prisma.quotation.update({
-      where: { id: params.id },
-      data: {
-        ...(customerId && { customerId }),
-        ...(validUntil && { validUntil: new Date(validUntil) }),
-        ...(notes !== undefined && { notes }),
-        ...(status && { status }),
-      },
-      include: { customer: true, items: true },
-    })
-
-    return NextResponse.json(updated)
-  } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const quotation = await prisma.quotation.findFirst({ where: { id: params.id, userId: session.user.id } })
-    if (!quotation) return NextResponse.json({ error: 'Quotation not found' }, { status: 404 })
-
-    await prisma.quotation.delete({ where: { id: params.id } })
-    return NextResponse.json({ message: 'Quotation deleted' })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  await prisma.quotation.delete({ where: { id } })
+  await audit({
+    organizationId: ctx.organization.id,
+    userId: ctx.user.id,
+    action: 'quotation.deleted',
+    entityType: 'quotation',
+    entityId: id,
+    metadata: { quotationNumber: quotation.quotationNumber },
+  })
+  return { id }
+})
