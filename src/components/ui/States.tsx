@@ -60,7 +60,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
       <div className="relative">
         <div className="relative mx-auto mb-5 w-16 h-16">
           <div className="absolute inset-0 rounded-2xl bg-brand-500/10 blur-xl" />
-          <div className="relative w-16 h-16 rounded-2xl bg-white border border-slate-200 shadow-card flex items-center justify-center">
+          <div className="relative w-16 h-16 rounded-2xl bg-card border border-slate-200 shadow-card flex items-center justify-center">
             <Icon className="w-7 h-7 text-brand-600" strokeWidth={1.75} />
           </div>
         </div>

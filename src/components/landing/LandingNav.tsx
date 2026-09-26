@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const links = [
@@ -29,7 +30,7 @@ export function LandingNav() {
         className={cn(
           'mx-auto max-w-6xl flex items-center justify-between gap-4 h-14 pl-4 pr-2 rounded-2xl transition-all duration-300',
           scrolled || open
-            ? 'bg-white/80 backdrop-blur-xl backdrop-saturate-150 border border-slate-200/70 shadow-[0_8px_30px_-12px_rgb(15_23_42/0.18)]'
+            ? 'bg-card/80 backdrop-blur-xl backdrop-saturate-150 border border-slate-200/70 shadow-[0_8px_30px_-12px_rgb(15_23_42/0.18)]'
             : 'border border-transparent'
         )}
       >
@@ -50,6 +51,7 @@ export function LandingNav() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle />
           <Link href="/login" className="btn-ghost h-10 px-3.5 text-slate-700">
             Sign in
           </Link>
@@ -59,6 +61,8 @@ export function LandingNav() {
           </Link>
         </div>
 
+        <div className="md:hidden flex items-center gap-1">
+        <ThemeToggle />
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -68,10 +72,11 @@ export function LandingNav() {
         >
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
+        </div>
       </nav>
 
       {open && (
-        <div className="md:hidden mx-auto max-w-6xl mt-2 p-2 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/70 shadow-elevated animate-scale-in">
+        <div className="md:hidden mx-auto max-w-6xl mt-2 p-2 rounded-2xl bg-card/95 backdrop-blur-xl border border-slate-200/70 shadow-elevated animate-scale-in">
           {links.map((l) => (
             <Link
               key={l.href}

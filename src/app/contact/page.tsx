@@ -14,7 +14,7 @@ export default function ContactPage() {
     <MarketingShell>
       <PageHero eyebrow="Contact" title="We’d love to hear from you" description="Questions about plans, VAT, onboarding your team or your account? Send us a message." />
       <section className="mx-auto max-w-5xl px-4 sm:px-6 pb-24 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
-        <div className="rounded-3xl bg-white ring-1 ring-slate-200/80 shadow-card p-6 sm:p-8">
+        <div className="rounded-3xl bg-card ring-1 ring-slate-200/80 shadow-card p-6 sm:p-8">
           <ContactForm />
         </div>
         <aside className="space-y-4">

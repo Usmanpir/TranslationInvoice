@@ -86,7 +86,7 @@ export default function FeaturesPage() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {FEATURES.map((f) => (
-            <article key={f.title} className="rounded-3xl bg-white ring-1 ring-slate-200/80 shadow-card p-7 transition-all hover:-translate-y-0.5 hover:shadow-card-hover">
+            <article key={f.title} className="rounded-3xl bg-card ring-1 ring-slate-200/80 shadow-card p-7 transition-all hover:-translate-y-0.5 hover:shadow-card-hover">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-600/20">
                 <f.icon className="w-5 h-5 text-white" />
               </div>

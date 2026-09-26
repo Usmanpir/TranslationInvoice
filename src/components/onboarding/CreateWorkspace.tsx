@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Building2, Loader2 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { Alert } from '@/components/ui/States'
 import { api, errorMessage } from '@/lib/api-client'
 import { CURRENCIES } from '@/lib/utils'
@@ -35,8 +36,9 @@ export function CreateWorkspace({ firstWorkspace, userName }: { firstWorkspace: 
   return (
     <div className="min-h-screen bg-surface-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md animate-fade-up">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between gap-2">
           <Logo />
+          <ThemeToggle className="ml-auto" />
           {!firstWorkspace && (
             <Link href="/dashboard" className="btn-ghost text-sm">
               <ArrowLeft className="w-4 h-4" /> Back

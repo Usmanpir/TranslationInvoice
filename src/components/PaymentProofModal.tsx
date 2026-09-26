@@ -195,7 +195,7 @@ export function PaymentProofModal({ invoiceId, invoiceNumber, amountLabel, onRec
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="w-11 h-11 bg-white rounded-2xl border border-slate-200 shadow-card flex items-center justify-center mx-auto">
+                <div className="w-11 h-11 bg-card rounded-2xl border border-slate-200 shadow-card flex items-center justify-center mx-auto">
                   {canAttach ? <Upload className="w-5 h-5 text-brand-600" /> : <Lock className="w-5 h-5 text-slate-400" />}
                 </div>
                 <p className="text-sm font-medium text-slate-700">

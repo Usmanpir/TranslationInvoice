@@ -55,7 +55,7 @@ function VariantIcon({ variant }: { variant: Variant }) {
   }
   const { Icon, bg, color } = map[variant]
   return (
-    <div className={`relative w-12 h-12 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0 ring-8 ring-white`}>
+    <div className={`relative w-12 h-12 rounded-2xl ${bg} flex items-center justify-center flex-shrink-0 ring-8 ring-card`}>
       <Icon className={`w-5 h-5 ${color}`} />
     </div>
   )
@@ -133,14 +133,14 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
       ? createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in"
+              className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm animate-fade-in"
               aria-hidden
             />
             <div
               role="dialog"
               aria-modal="true"
               aria-labelledby="dialog-title"
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
+              className="relative w-full max-w-md bg-card rounded-3xl shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
             >
               <button
                 type="button"

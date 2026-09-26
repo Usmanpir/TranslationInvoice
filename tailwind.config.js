@@ -1,5 +1,8 @@
+const { themeColors, themePlugin } = require('./theme.tokens')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -12,30 +15,7 @@ module.exports = {
         display: ['var(--font-display)', 'var(--font-sans)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
-      colors: {
-        brand: {
-          50: '#f0f7ff',
-          100: '#e0effe',
-          200: '#bae0fd',
-          300: '#7cc7fc',
-          400: '#36aaf8',
-          500: '#0c8fe9',
-          600: '#0070c7',
-          700: '#0059a2',
-          800: '#044c85',
-          900: '#09406e',
-          950: '#062849',
-        },
-        surface: {
-          DEFAULT: '#ffffff',
-          50: '#f7f8fb',
-          100: '#f1f4f8',
-          200: '#e3e8ef',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#070d1a',
-        },
-      },
+      colors: themeColors,
       boxShadow: {
         'card': '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px -1px rgb(15 23 42 / 0.04)',
         'card-hover': '0 12px 32px -12px rgb(15 23 42 / 0.14), 0 4px 10px -4px rgb(15 23 42 / 0.06)',
@@ -84,5 +64,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [themePlugin],
 }

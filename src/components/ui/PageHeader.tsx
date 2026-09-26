@@ -11,7 +11,7 @@ export function PageHeader({ title, description, children, className }: PageHead
   return (
     <div
       className={cn(
-        'lg:sticky lg:top-0 z-20 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/70',
+        'lg:sticky lg:top-0 z-20 bg-card/80 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/70',
         className
       )}
     >

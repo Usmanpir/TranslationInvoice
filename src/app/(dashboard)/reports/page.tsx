@@ -83,7 +83,7 @@ export default function ReportsPage() {
                   { icon: Clock, t: 'Outstanding', d: 'Aging: current to 90+ days' },
                   { icon: Percent, t: 'VAT summary', d: 'Taxable amount and output VAT by rate' },
                 ].map((x) => (
-                  <div key={x.t} className="rounded-xl bg-white ring-1 ring-slate-200 p-4">
+                  <div key={x.t} className="rounded-xl bg-card ring-1 ring-slate-200 p-4">
                     <x.icon className="w-4 h-4 text-brand-600" />
                     <p className="mt-2 text-sm font-semibold text-slate-900">{x.t}</p>
                     <p className="text-xs text-slate-500">{x.d}</p>
@@ -130,7 +130,7 @@ export default function ReportsPage() {
                 onClick={() => setTab(t.id)}
                 className={cn(
                   'inline-flex items-center gap-2 px-3.5 h-9 text-sm font-medium rounded-lg transition-all',
-                  tab === t.id ? 'bg-white text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
+                  tab === t.id ? 'bg-card text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
                 )}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
@@ -188,7 +188,7 @@ export default function ReportsPage() {
                               <span className="font-semibold tabular-nums">{formatCurrency(c.total, c.currency)}</span>
                             </div>
                             <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div className="h-full rounded-full bg-[#0070c7]" style={{ width: `${(c.total / max) * 100}%` }} />
+                              <div className="h-full rounded-full bg-chart" style={{ width: `${(c.total / max) * 100}%` }} />
                             </div>
                           </li>
                         )
@@ -223,7 +223,7 @@ export default function ReportsPage() {
                               <div className="h-6 rounded-md bg-slate-50 overflow-hidden">
                                 <div
                                   className="h-full rounded-r-[4px]"
-                                  style={{ width: `${(buckets[b].amount / max) * 100}%`, backgroundColor: i === 0 ? '#0070c7' : i < 3 ? '#d97706' : '#dc2626' }}
+                                  style={{ width: `${(buckets[b].amount / max) * 100}%`, backgroundColor: i === 0 ? 'rgb(var(--c-chart-1))' : i < 3 ? '#d97706' : '#dc2626' }}
                                 />
                               </div>
                               <span className="text-right tabular-nums">

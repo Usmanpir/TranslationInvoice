@@ -34,7 +34,7 @@ export const FAQ_ITEMS = [
 
 export function Faq({ items = FAQ_ITEMS }: { items?: typeof FAQ_ITEMS }) {
   return (
-    <div className="divide-y divide-slate-200/70 rounded-3xl bg-white ring-1 ring-slate-200/80 shadow-card">
+    <div className="divide-y divide-slate-200/70 rounded-3xl bg-card ring-1 ring-slate-200/80 shadow-card">
       {items.map((item) => (
         <details key={item.q} className="group px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer items-center justify-between gap-4 list-none">

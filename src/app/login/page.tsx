@@ -132,7 +132,7 @@ function LoginForm() {
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="px-3 text-xs font-medium text-slate-400 bg-white">or</span>
+          <span className="px-3 text-xs font-medium text-slate-400 bg-card">or</span>
         </div>
       </div>
 

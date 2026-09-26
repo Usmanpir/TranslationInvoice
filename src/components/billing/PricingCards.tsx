@@ -40,7 +40,7 @@ export function IntervalToggle({ value, onChange }: { value: Interval; onChange:
           onClick={() => onChange(iv)}
           className={cn(
             'px-4 h-9 text-sm font-semibold rounded-lg transition-all',
-            value === iv ? 'bg-white text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
+            value === iv ? 'bg-card text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
           )}
         >
           {iv === 'MONTH' ? 'Monthly' : 'Yearly'}
@@ -86,8 +86,8 @@ export function PricingCards({ interval, mode, currentPlan, currentInterval, bus
             className={cn(
               'relative flex flex-col rounded-3xl p-6 transition-all duration-300',
               highlighted
-                ? 'bg-slate-950 text-white shadow-glow ring-1 ring-brand-500/40 xl:-translate-y-2'
-                : 'bg-white ring-1 ring-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-0.5',
+                ? 'bg-ink-950 text-white shadow-glow ring-1 ring-brand-500/40 xl:-translate-y-2'
+                : 'bg-card ring-1 ring-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-0.5',
               isCurrent && !highlighted && 'ring-2 ring-brand-500'
             )}
           >
@@ -102,16 +102,16 @@ export function PricingCards({ interval, mode, currentPlan, currentInterval, bus
               </span>
             )}
             <h3 className={cn('font-display text-lg font-bold', highlighted ? 'text-white' : 'text-slate-900')}>{plan.name}</h3>
-            <p className={cn('text-sm mt-1 min-h-[40px]', highlighted ? 'text-slate-400' : 'text-slate-500')}>{plan.tagline}</p>
+            <p className={cn('text-sm mt-1 min-h-[40px]', highlighted ? 'text-ink-400' : 'text-slate-500')}>{plan.tagline}</p>
 
             <div className="mt-5 flex items-baseline gap-1.5">
-              <span className={cn('text-sm font-semibold', highlighted ? 'text-slate-300' : 'text-slate-500')}>{BILLING_CURRENCY}</span>
+              <span className={cn('text-sm font-semibold', highlighted ? 'text-ink-300' : 'text-slate-500')}>{BILLING_CURRENCY}</span>
               <span className={cn('font-display text-4xl font-extrabold tracking-tight tabular-nums', highlighted ? 'text-white' : 'text-slate-900')}>
                 {perMonth.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </span>
-              <span className={cn('text-sm', highlighted ? 'text-slate-400' : 'text-slate-500')}>/ month</span>
+              <span className={cn('text-sm', highlighted ? 'text-ink-400' : 'text-slate-500')}>/ month</span>
             </div>
-            <p className={cn('text-xs mt-1 h-4', highlighted ? 'text-slate-400' : 'text-slate-400')}>
+            <p className={cn('text-xs mt-1 h-4', highlighted ? 'text-ink-400' : 'text-slate-400')}>
               {price === 0 ? 'Free forever' : interval === 'YEAR' ? `${BILLING_CURRENCY} ${price.toLocaleString()} billed yearly` : 'Billed monthly'}
             </p>
 
@@ -136,7 +136,7 @@ export function PricingCards({ interval, mode, currentPlan, currentInterval, bus
               {planHighlights(id).map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
                   <Check className={cn('w-4 h-4 mt-0.5 flex-shrink-0', highlighted ? 'text-brand-300' : 'text-emerald-500')} />
-                  <span className={highlighted ? 'text-slate-300' : 'text-slate-600'}>{f}</span>
+                  <span className={highlighted ? 'text-ink-300' : 'text-slate-600'}>{f}</span>
                 </li>
               ))}
             </ul>

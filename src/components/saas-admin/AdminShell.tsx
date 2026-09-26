@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Building2, CreditCard, History, LayoutGrid, Layers, Menu, Settings2, ShieldCheck, Users, Wallet, X } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -48,7 +49,7 @@ export function AdminShell({ user, children }: { user: { name: string; email: st
   useEffect(() => setOpen(false), [pathname])
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-300">
+    <div className="flex h-full flex-col bg-ink-950 text-ink-300">
       <div className="px-5 pt-5 pb-4">
         <Logo dark />
         <span className="mt-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-300 text-[11px] font-semibold ring-1 ring-inset ring-violet-400/30">
@@ -59,12 +60,13 @@ export function AdminShell({ user, children }: { user: { name: string; email: st
         <Nav onNavigate={() => setOpen(false)} />
       </div>
       <div className="border-t border-white/[0.06] p-3 space-y-2">
-        <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/[0.05]">
+        <ThemeToggle variant="segmented" onDark className="w-full" />
+        <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-ink-400 hover:text-white hover:bg-white/[0.05]">
           <ArrowLeft className="w-4 h-4" /> Back to my workspace
         </Link>
         <div className="px-3 py-2 rounded-xl bg-white/[0.04]">
-          <p className="text-[13px] font-semibold text-slate-100 truncate">{user.name}</p>
-          <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+          <p className="text-[13px] font-semibold text-ink-100 truncate">{user.name}</p>
+          <p className="text-[11px] text-ink-500 truncate">{user.email}</p>
         </div>
       </div>
     </div>
@@ -73,7 +75,7 @@ export function AdminShell({ user, children }: { user: { name: string; email: st
   return (
     <div className="min-h-screen bg-surface-50">
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-60 z-40">{sidebar}</aside>
-      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200/70">
+      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-card/80 backdrop-blur-xl border-b border-slate-200/70">
         <button onClick={() => setOpen(true)} className="icon-btn w-10 h-10" aria-label="Open menu">
           <Menu className="w-5 h-5" />
         </button>
@@ -82,7 +84,7 @@ export function AdminShell({ user, children }: { user: { name: string; email: st
       </div>
       {open && (
         <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
+          <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
           <div className="absolute inset-y-0 left-0 w-64 animate-slide-in-left">
             {sidebar}
             <button onClick={() => setOpen(false)} className="absolute top-4 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white" aria-label="Close menu">

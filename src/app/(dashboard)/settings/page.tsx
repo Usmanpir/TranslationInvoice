@@ -121,7 +121,7 @@ export default function SettingsPage() {
               onClick={() => setTab(t.id)}
               className={cn(
                 'inline-flex items-center gap-2 px-3.5 h-9 text-sm font-medium rounded-lg transition-all whitespace-nowrap',
-                tab === t.id ? 'bg-white text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
+                tab === t.id ? 'bg-card text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
               )}
             >
               <t.icon className="w-4 h-4" />
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                         value={form.primaryColor || '#0070c7'}
                         onChange={(e) => set('primaryColor', e.target.value)}
                         disabled={!canBrand || readOnly}
-                        className="h-10 w-14 rounded-xl border border-slate-200 bg-white p-1 cursor-pointer disabled:cursor-not-allowed"
+                        className="h-10 w-14 rounded-xl border border-slate-200 bg-card p-1 cursor-pointer disabled:cursor-not-allowed"
                       />
                       <input {...text('primaryColor')} disabled={!canBrand || readOnly} className="input font-mono" maxLength={7} />
                     </div>
@@ -364,11 +364,11 @@ export default function SettingsPage() {
       {/* Save bar */}
       {!readOnly && dirtyKeys.length > 0 && (
         <div className="fixed bottom-4 inset-x-4 lg:left-[calc(16rem+1rem)] z-30 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-3 pl-5 pr-2 py-2 rounded-2xl bg-slate-900 text-white shadow-elevated animate-scale-in">
+          <div className="pointer-events-auto flex items-center gap-3 pl-5 pr-2 py-2 rounded-2xl bg-ink-900 text-white shadow-elevated animate-scale-in">
             <p className="text-sm">
               {dirtyKeys.length} unsaved change{dirtyKeys.length === 1 ? '' : 's'}
             </p>
-            <button onClick={() => setForm(original)} className="btn h-9 px-3 text-slate-200 hover:bg-white/10">
+            <button onClick={() => setForm(original)} className="btn h-9 px-3 text-ink-200 hover:bg-white/10">
               <RotateCcw className="w-4 h-4" /> Discard
             </button>
             <button onClick={save} disabled={saving} className="btn-primary h-9">

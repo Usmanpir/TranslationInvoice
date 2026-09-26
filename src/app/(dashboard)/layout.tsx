@@ -27,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Sidebar />
         <main className="lg:ml-64 min-h-screen flex flex-col">
           {/* Mobile / tablet top bar */}
-          <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-16 bg-white/80 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/70">
+          <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 h-16 bg-card/80 backdrop-blur-xl backdrop-saturate-150 border-b border-slate-200/70">
             <MobileSidebar />
             <Link href="/dashboard" aria-label="Dashboard">
               <Logo markClassName="w-8 h-8 rounded-[10px]" textClassName="text-base" />

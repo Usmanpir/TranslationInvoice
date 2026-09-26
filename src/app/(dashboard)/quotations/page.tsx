@@ -146,7 +146,7 @@ export default function QuotationsPage() {
                 }}
                 className={cn(
                   'px-3 h-8 text-xs font-semibold rounded-lg transition-all whitespace-nowrap',
-                  status === s ? 'bg-white text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
+                  status === s ? 'bg-card text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
                 )}
               >
                 {s ? s.charAt(0) + s.slice(1).toLowerCase() : 'All'}

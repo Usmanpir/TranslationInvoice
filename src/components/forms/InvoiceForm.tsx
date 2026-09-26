@@ -218,7 +218,7 @@ export function InvoiceForm({ type = 'invoice', initialData, defaultCustomerId }
               className="input tabular-nums"
             />
           </div>
-          <label className="flex items-center gap-3 h-10 px-3.5 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-300">
+          <label className="flex items-center gap-3 h-10 px-3.5 rounded-xl border border-slate-200 bg-card cursor-pointer hover:border-slate-300">
             <input type="checkbox" checked={taxInclusive} onChange={(e) => setTaxInclusive(e.target.checked)} className="w-4 h-4 rounded accent-brand-600" />
             <span className="text-sm text-slate-700">Prices include {organization.taxLabel}</span>
           </label>
@@ -355,7 +355,7 @@ export function InvoiceForm({ type = 'invoice', initialData, defaultCustomerId }
         {/* Totals */}
         <div className="border-t border-slate-100 bg-slate-50/50 px-5 sm:px-6 py-5">
           <div className="flex justify-end">
-            <div className="w-full sm:w-80 rounded-xl bg-white border border-slate-200/80 shadow-card overflow-hidden text-sm">
+            <div className="w-full sm:w-80 rounded-xl bg-card border border-slate-200/80 shadow-card overflow-hidden text-sm">
               <div className="p-4 space-y-2">
                 <div className="flex justify-between text-slate-500">
                   <span>Subtotal{taxInclusive ? ` (incl. ${organization.taxLabel})` : ''}</span>
@@ -376,7 +376,7 @@ export function InvoiceForm({ type = 'invoice', initialData, defaultCustomerId }
                   </div>
                 )}
               </div>
-              <div className="flex justify-between items-center px-4 py-3.5 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+              <div className="flex justify-between items-center px-4 py-3.5 bg-gradient-to-r from-ink-900 to-ink-800 text-white">
                 <span className="font-medium">Total</span>
                 <span className="font-display text-lg font-bold tabular-nums">{formatCurrency(totals.total, currency)}</span>
               </div>
@@ -399,7 +399,7 @@ export function InvoiceForm({ type = 'invoice', initialData, defaultCustomerId }
       </FormSection>
 
       {/* Action bar */}
-      <div className="sticky bottom-0 z-10 -mx-4 sm:mx-0 px-4 sm:px-5 py-3.5 sm:rounded-2xl bg-white/85 backdrop-blur-xl border-t sm:border border-slate-200/70 shadow-[0_-8px_30px_-12px_rgb(15_23_42/0.15)] flex items-center justify-between gap-3">
+      <div className="sticky bottom-0 z-10 -mx-4 sm:mx-0 px-4 sm:px-5 py-3.5 sm:rounded-2xl bg-card/85 backdrop-blur-xl border-t sm:border border-slate-200/70 shadow-[0_-8px_30px_-12px_rgb(15_23_42/0.15)] flex items-center justify-between gap-3">
         <div className="hidden sm:block text-sm text-slate-500">
           Total <span className="font-display font-bold text-slate-900 tabular-nums ml-1">{formatCurrency(totals.total, currency)}</span>
         </div>

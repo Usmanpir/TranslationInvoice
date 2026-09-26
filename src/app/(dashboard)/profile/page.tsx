@@ -5,6 +5,7 @@ import { Bell, Eye, EyeOff, Globe2, KeyRound, Loader2, Lock, LogOut, Save, Shiel
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Alert, PageLoader } from '@/components/ui/States'
 import { FormSection } from '@/components/forms/FormSection'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { api, ApiRequestError } from '@/lib/api-client'
 import { ROLE_LABELS } from '@/lib/permissions'
 import { useDialog } from '@/components/ui/Dialog'
@@ -152,7 +153,7 @@ export default function ProfilePage() {
               <div aria-hidden className="absolute inset-0 bg-grid-dark opacity-50" />
             </div>
             <div className="relative px-5 sm:px-6 pb-5 flex items-end gap-4">
-              <div className="relative -mt-10 flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-indigo-600 ring-4 ring-white shadow-elevated flex items-center justify-center text-white font-display text-2xl font-bold">
+              <div className="relative -mt-10 flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-indigo-600 ring-4 ring-card shadow-elevated flex items-center justify-center text-white font-display text-2xl font-bold">
                 {profile.name[0]?.toUpperCase()}
               </div>
               <div className="min-w-0 pb-1">
@@ -186,7 +187,12 @@ export default function ProfilePage() {
               </div>
             </FormSection>
 
-            <FormSection icon={Globe2} title="Preferences" description="Language, timezone and date display">
+            <FormSection icon={Globe2} title="Preferences" description="Appearance, language, timezone and date display">
+              <div className="mb-5">
+                <p className="label">Appearance</p>
+                <ThemeToggle variant="segmented" />
+                <p className="hint">“System” follows your device setting. Saved on this browser.</p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="label" htmlFor="locale">Language</label>

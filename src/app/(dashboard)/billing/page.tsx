@@ -214,16 +214,16 @@ function Billing() {
 
         {/* Current plan + usage */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <section className="lg:col-span-2 relative overflow-hidden rounded-3xl bg-slate-950 text-white p-6 sm:p-7 animate-fade-up">
+          <section className="lg:col-span-2 relative overflow-hidden rounded-3xl bg-ink-950 text-white p-6 sm:p-7 animate-fade-up">
             <div aria-hidden className="absolute inset-0 bg-grid-dark mask-radial opacity-70" />
             <div aria-hidden className="absolute -top-24 -right-20 w-72 h-72 rounded-full bg-[radial-gradient(closest-side,rgb(12_143_233/0.35),transparent)]" />
             <div className="relative">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Current plan</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">Current plan</p>
                 <span className={cn('badge', status.cls)}>{status.label}</span>
               </div>
               <p className="mt-3 font-display text-3xl font-extrabold tracking-tight">{PLANS[c.subscribedPlanId].name}</p>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-ink-400">
                 {c.subscribedPlanId === 'free'
                   ? 'Free forever'
                   : `${data.currency} ${planPrice(c.subscribedPlanId, c.interval).toLocaleString()} / ${c.interval === 'YEAR' ? 'year' : 'month'}`}
@@ -232,7 +232,7 @@ function Billing() {
               <dl className="mt-6 space-y-2.5 text-sm">
                 {c.isTrial && c.trialEnd && (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-400">Trial ends</dt>
+                    <dt className="text-ink-400">Trial ends</dt>
                     <dd className="font-medium">
                       {formatDate(c.trialEnd)} ({c.trialDaysLeft} day{c.trialDaysLeft === 1 ? '' : 's'} left)
                     </dd>
@@ -240,16 +240,16 @@ function Billing() {
                 )}
                 {!c.isTrial && c.currentPeriodEnd && paidPlan && (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-400">{c.provider === 'MANUAL' ? 'Paid until' : c.cancelAtPeriodEnd ? 'Ends on' : 'Renews on'}</dt>
+                    <dt className="text-ink-400">{c.provider === 'MANUAL' ? 'Paid until' : c.cancelAtPeriodEnd ? 'Ends on' : 'Renews on'}</dt>
                     <dd className="font-medium">{formatDate(c.currentPeriodEnd)}</dd>
                   </div>
                 )}
                 <div className="flex justify-between gap-3">
-                  <dt className="text-slate-400">Billing method</dt>
+                  <dt className="text-ink-400">Billing method</dt>
                   <dd className="font-medium">{c.provider === 'STRIPE' ? 'Card' : c.provider === 'MANUAL' ? 'Bank transfer' : '—'}</dd>
                 </div>
                 {c.lapsed && (
-                  <div className="flex items-start gap-2 mt-3 p-3 rounded-xl bg-amber-400/10 ring-1 ring-amber-400/30 text-amber-200 text-xs">
+                  <div className="flex items-start gap-2 mt-3 p-3 rounded-xl bg-amber-400/10 ring-1 ring-amber-400/30 text-fixed-amber-200 text-xs">
                     <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                     Free plan limits apply until you choose a plan. Your data is safe.
                   </div>

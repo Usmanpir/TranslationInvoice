@@ -160,7 +160,7 @@ export default function TeamPage() {
               return (
                 <li key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 sm:px-6 py-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-9 h-9 bg-gradient-to-br from-brand-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-white shadow-sm">
+                    <div className="w-9 h-9 bg-gradient-to-br from-brand-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-2 ring-card shadow-sm">
                       {m.user.name[0]?.toUpperCase()}
                     </div>
                     <div className="min-w-0">

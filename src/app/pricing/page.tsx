@@ -49,7 +49,7 @@ export default function PricingPage() {
 
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-24">
         <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 text-center tracking-tight">Compare plans</h2>
-        <div className="mt-10 overflow-x-auto rounded-3xl ring-1 ring-slate-200/80 bg-white shadow-card">
+        <div className="mt-10 overflow-x-auto rounded-3xl ring-1 ring-slate-200/80 bg-card shadow-card">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-slate-200">

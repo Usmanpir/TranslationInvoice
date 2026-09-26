@@ -108,7 +108,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
                 <div
                   key={t.id}
                   role={t.kind === 'error' ? 'alert' : 'status'}
-                  className="pointer-events-auto flex items-start gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
+                  className="pointer-events-auto flex items-start gap-3 rounded-2xl bg-card px-4 py-3.5 shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
                 >
                   <Icon className={cn('w-5 h-5 mt-0.5 flex-shrink-0', STYLES[t.kind])} />
                   <p className="flex-1 text-sm text-slate-700 leading-snug">{t.message}</p>
@@ -137,12 +137,12 @@ function UpgradeDialog({ message, details, onClose }: { message: string; details
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm animate-fade-in" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="upgrade-title"
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-elevated ring-1 ring-slate-900/5 overflow-hidden animate-scale-in"
+        className="relative w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated ring-1 ring-slate-900/5 overflow-hidden animate-scale-in"
       >
         <div className="relative px-6 pt-7 pb-6 bg-gradient-to-br from-brand-600 via-indigo-600 to-violet-600 text-white">
           <div aria-hidden className="absolute inset-0 bg-grid-dark opacity-40" />

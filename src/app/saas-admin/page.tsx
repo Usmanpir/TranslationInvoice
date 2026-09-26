@@ -100,7 +100,7 @@ export default function SaasOverviewPage() {
                         <span className="font-semibold tabular-nums">{count}</span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full rounded-full bg-[#0070c7]" style={{ width: `${(count / max) * 100}%` }} />
+                        <div className="h-full rounded-full bg-chart" style={{ width: `${(count / max) * 100}%` }} />
                       </div>
                     </li>
                   )

@@ -56,7 +56,7 @@ export function DocumentPreview({ doc, compact = false }: { doc: PreviewDocument
   const title = doc.kind === 'invoice' ? 'Invoice' : 'Quotation'
 
   return (
-    <div className={`relative card overflow-hidden ${compact ? 'p-5 sm:p-7' : 'p-5 sm:p-10'} shadow-elevated print:shadow-none`} id="invoice-print">
+    <div className={`theme-light relative card overflow-hidden ${compact ? 'p-5 sm:p-7' : 'p-5 sm:p-10'} shadow-elevated print:shadow-none`} id="invoice-print">
       <div aria-hidden className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: color }} />
 
       <div className="text-center mb-6">
@@ -188,7 +188,7 @@ export function DocumentPreview({ doc, compact = false }: { doc: PreviewDocument
             </span>
             <span className="font-medium text-slate-900 tabular-nums">{formatCurrency(doc.taxAmount, cur)}</span>
           </div>
-          <div className="flex justify-between px-4 py-3.5 bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold text-base tabular-nums">
+          <div className="flex justify-between px-4 py-3.5 bg-gradient-to-r from-ink-900 to-ink-800 text-white font-bold text-base tabular-nums">
             <span>Total</span>
             <span>{formatCurrency(doc.total, cur)}</span>
           </div>

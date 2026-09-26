@@ -31,7 +31,7 @@ const COLUMNS = [
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-slate-100 bg-white">
+    <footer className="border-t border-slate-100 bg-card">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14 grid grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2">
           <Logo markClassName="w-8 h-8 rounded-[10px]" />

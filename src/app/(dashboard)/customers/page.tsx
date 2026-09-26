@@ -30,7 +30,7 @@ function avatarGradient(name: string) {
 
 function Avatar({ name }: { name: string }) {
   return (
-    <div className={`w-9 h-9 bg-gradient-to-br ${avatarGradient(name)} rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-white shadow-sm`}>
+    <div className={`w-9 h-9 bg-gradient-to-br ${avatarGradient(name)} rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-card shadow-sm`}>
       <span className="text-sm font-bold text-white">{name[0]?.toUpperCase()}</span>
     </div>
   )

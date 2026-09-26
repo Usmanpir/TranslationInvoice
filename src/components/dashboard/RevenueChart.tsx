@@ -84,7 +84,7 @@ export function RevenueChart({ data, currency }: { data: Point[]; currency: stri
                     className="relative w-full max-w-[24px] mx-[1px] rounded-t-[4px] transition-[height,opacity] duration-500"
                     style={{
                       height: Math.max(d.total > 0 ? 2 : 0, h),
-                      backgroundColor: '#0070c7',
+                      backgroundColor: 'rgb(var(--c-chart-1))',
                       opacity: hover === null || active ? 1 : 0.55,
                     }}
                   />
@@ -98,10 +98,10 @@ export function RevenueChart({ data, currency }: { data: Point[]; currency: stri
                   )}
                   {active && (
                     <div
-                      className="absolute z-10 px-3 py-2 rounded-xl bg-slate-900 text-white shadow-elevated whitespace-nowrap pointer-events-none"
+                      className="absolute z-10 px-3 py-2 rounded-xl bg-ink-900 text-white shadow-elevated whitespace-nowrap pointer-events-none"
                       style={{ bottom: Math.min(PLOT_H - 40, h + 10) }}
                     >
-                      <p className="text-[11px] text-slate-300">{monthLabel(d.month, true)}</p>
+                      <p className="text-[11px] text-ink-300">{monthLabel(d.month, true)}</p>
                       <p className="text-sm font-semibold tabular-nums">{formatCurrency(d.total, currency)}</p>
                     </div>
                   )}
@@ -128,7 +128,7 @@ export function RevenueChart({ data, currency }: { data: Point[]; currency: stri
 
           {!hasData && (
             <div className="absolute inset-x-0 top-0 flex items-center justify-center" style={{ height: PLOT_H }}>
-              <p className="px-3 py-1.5 rounded-lg bg-white/90 text-sm text-slate-500 ring-1 ring-slate-200">
+              <p className="px-3 py-1.5 rounded-lg bg-card/90 text-sm text-slate-500 ring-1 ring-slate-200">
                 Revenue appears here once invoices are paid.
               </p>
             </div>

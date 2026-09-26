@@ -6,6 +6,7 @@ import '@fontsource-variable/jetbrains-mono'
 import './globals.css'
 import { Providers } from './providers'
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from '@/lib/site'
+import { themeInitScript } from '@/lib/theme'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -34,14 +35,21 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0070c7',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f8fb' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a101d' },
+  ],
   width: 'device-width',
   initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The inline script sets the theme class before hydration, so React must not warn about it.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

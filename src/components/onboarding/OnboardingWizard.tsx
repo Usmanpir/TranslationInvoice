@@ -18,6 +18,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { Alert } from '@/components/ui/States'
 import { LogoUploader } from '@/components/settings/LogoUploader'
 import { api, errorMessage } from '@/lib/api-client'
@@ -173,8 +174,9 @@ export function OnboardingWizard({
     <div className="min-h-screen bg-surface-50">
       <div aria-hidden className="fixed inset-x-0 top-0 h-80 bg-gradient-to-b from-brand-50 to-transparent pointer-events-none" />
       <div className="relative mx-auto max-w-3xl px-4 py-8 sm:py-12">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-2 mb-8">
           <Logo />
+          <ThemeToggle className="ml-auto" />
           {step > 0 && step < STEPS.length - 1 && (
             <button onClick={() => setStep(STEPS.length - 1)} className="btn-ghost text-sm">
               Skip setup for now
@@ -189,7 +191,7 @@ export function OnboardingWizard({
               <div
                 className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors',
-                  i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-white text-slate-400 ring-1 ring-slate-200'
+                  i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-card text-slate-400 ring-1 ring-slate-200'
                 )}
                 aria-current={i === step ? 'step' : undefined}
               >

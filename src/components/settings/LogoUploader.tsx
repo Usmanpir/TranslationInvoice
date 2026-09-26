@@ -55,7 +55,7 @@ export function LogoUploader({ logoUrl, locked, onChange }: LogoUploaderProps) {
           <Loader2 className="w-5 h-5 animate-spin text-brand-600" />
         ) : logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="Logo" className="w-full h-full object-contain bg-white p-1.5" />
+          <img src={logoUrl} alt="Logo" className="w-full h-full object-contain bg-card p-1.5" />
         ) : locked ? (
           <Lock className="w-5 h-5 text-slate-400" />
         ) : (

@@ -220,7 +220,7 @@ export default function DashboardPage() {
                 onClick={() => choosePreset(p.id)}
                 className={cn(
                   'px-3 h-8 text-xs font-semibold rounded-lg transition-all whitespace-nowrap',
-                  preset === p.id ? 'bg-white text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
+                  preset === p.id ? 'bg-card text-slate-900 shadow-[0_1px_3px_0_rgb(15_23_42/0.12)] ring-1 ring-slate-200/70' : 'text-slate-500 hover:text-slate-900'
                 )}
               >
                 {p.label}
@@ -276,7 +276,7 @@ export default function DashboardPage() {
             {data.otherCurrencies.length > 0 && (
               <div className="flex flex-wrap gap-2 -mt-2">
                 {data.otherCurrencies.map((c) => (
-                  <span key={c.currency} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white ring-1 ring-slate-200 text-xs text-slate-600">
+                  <span key={c.currency} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card ring-1 ring-slate-200 text-xs text-slate-600">
                     <span className="font-semibold text-slate-900">{c.currency}</span>
                     Paid {formatCurrency(c.paid, c.currency)} · Outstanding {formatCurrency(c.outstanding, c.currency)}
                   </span>

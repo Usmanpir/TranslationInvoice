@@ -20,12 +20,12 @@ export function Modal({ title, description, icon: Icon, onClose, children }: Mod
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" aria-hidden />
+      <div className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm animate-fade-in" aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
+        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto bg-card rounded-t-3xl sm:rounded-3xl shadow-elevated ring-1 ring-slate-900/5 animate-scale-in"
       >
         <div className="flex items-start gap-3.5 px-6 pt-6 pb-4">
           {Icon && (

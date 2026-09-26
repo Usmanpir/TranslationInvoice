@@ -4,7 +4,7 @@ import { Logo } from '@/components/ui/Logo'
 
 export default function NotFound() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-white overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-card overflow-hidden">
       <div aria-hidden className="absolute inset-0">
         <div className="absolute inset-0 bg-grid mask-radial" />
         <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full bg-[radial-gradient(closest-side,rgb(12_143_233/0.14),transparent)]" />

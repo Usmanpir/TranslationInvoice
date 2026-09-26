@@ -77,12 +77,12 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
           'relative inline-flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
           dark
             ? 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
-            : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shadow-[0_1px_2px_0_rgb(15_23_42/0.05)]'
+            : 'border border-slate-200 bg-card text-slate-600 hover:bg-slate-50 shadow-[0_1px_2px_0_rgb(15_23_42/0.05)]'
         )}
       >
         <Bell className="w-[18px] h-[18px]" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-card">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -91,7 +91,7 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
       {open && (
         <div
           className={cn(
-            'z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl bg-white shadow-elevated ring-1 ring-slate-900/5 overflow-hidden animate-scale-in',
+            'z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl bg-card shadow-elevated ring-1 ring-slate-900/5 overflow-hidden animate-scale-in',
             // The desktop sidebar clips overflow, so its dropdown is positioned against the viewport.
             dark ? 'fixed left-[16.75rem] top-4' : 'absolute right-0 mt-2'
           )}
